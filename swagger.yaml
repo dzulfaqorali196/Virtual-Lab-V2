@@ -1,0 +1,274 @@
+openapi: 3.0.0
+info:
+  title: Virtual Physics Lab API
+  description: API documentation for Virtual Physics Lab application
+  version: 1.0.0
+  contact:
+    name: Dzulfaqor Ali
+    email: dzulfaqor.18222017@mhs.itb.ac.id
+
+servers:
+  - url: https://virtual-physics-lab.vercel.app/api
+    description: Production server
+  - url: http://localhost:3000/api
+    description: Development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        image:
+          type: string
+          format: uri
+        preferences:
+          type: object
+          properties:
+            theme:
+              type: string
+              enum: [light, dark, system]
+            defaultLength:
+              type: number
+            defaultMass:
+              type: number
+            defaultAngle:
+              type: number
+            view3D:
+              type: boolean
+        profile:
+          type: object
+          properties:
+            bio:
+              type: string
+            institution:
+              type: string
+            role:
+              type: string
+            expertise:
+              type: array
+              items:
+                type: string
+            stats:
+              type: object
+              properties:
+                experimentsCompleted:
+                  type: number
+                totalExperimentTime:
+                  type: number
+                lastActive:
+                  type: string
+                  format: date-time
+
+    Experiment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        timestamp:
+          type: number
+        length:
+          type: number
+        mass:
+          type: number
+        angle:
+          type: number
+        duration:
+          type: number
+        measurements:
+          type: array
+          items:
+            type: object
+            properties:
+              time:
+                type: number
+              angle:
+                type: number
+              energy:
+                type: number
+
+    Progress:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        completedSections:
+          type: array
+          items:
+            type: string
+        quizScores:
+          type: object
+          additionalProperties:
+            type: number
+
+paths:
+  /auth/signin:
+    post:
+      summary: Authenticate user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider:
+                  type: string
+                  enum: [google, github]
+      responses:
+        '200':
+          description: Authentication successful
+        '401':
+          description: Authentication failed
+
+  /user/profile:
+    get:
+      summary: Get user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      summary: Update user profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Profile updated successfully
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+
+  /user/preferences:
+    get:
+      summary: Get user preferences
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User preferences
+    put:
+      summary: Update user preferences
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                theme:
+                  type: string
+                defaultLength:
+                  type: number
+                defaultMass:
+                  type: number
+                defaultAngle:
+                  type: number
+                view3D:
+                  type: boolean
+      responses:
+        '200':
+          description: Preferences updated successfully
+        '400':
+          description: Invalid input
+
+  /user/experiments:
+    get:
+      summary: Get user experiments
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Number of experiments to return
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: Number of experiments to skip
+      responses:
+        '200':
+          description: List of experiments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Experiment'
+    post:
+      summary: Save new experiment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Experiment'
+      responses:
+        '201':
+          description: Experiment saved successfully
+        '400':
+          description: Invalid input
+
+  /user/learning-progress:
+    get:
+      summary: Get learning progress
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User learning progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Progress'
+    put:
+      summary: Update learning progress
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Progress'
+      responses:
+        '200':
+          description: Progress updated successfully
+        '400':
+          description: Invalid input
