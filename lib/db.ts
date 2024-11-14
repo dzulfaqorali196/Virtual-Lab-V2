@@ -13,20 +13,6 @@ import type {
   AuditLog as AuditLogType
 } from '@/types/db';
 
-export async function findUser(email: string) {
-  await connectDB();
-  const user = await User.findOne({ email }).lean() as UserType | null;
-  if (!user) return null;
-  return {
-    id: user._id.toString(),
-    name: user.name,
-    email: user.email,
-    password: user.password,
-    preferences: user.preferences,
-    profile: user.profile
-  };
-}
-
 export async function findUserById(id: string) {
   await connectDB();
   const user = await User.findById(id).lean() as UserType | null;
@@ -210,30 +196,57 @@ export async function getLearningProgress(userId: string) {
   };
 }
 
+// ... kode lainnya tetap sama ...
+
 export async function getUserProfile(userId: string) {
   await connectDB();
-  const user = await User.findById(userId)
+  try {
+    // Coba cari user dengan berbagai kemungkinan identifier
+    const user = await User.findOne({ 
+      $or: [
+        // Coba konversi ke ObjectId jika valid
+        ...(mongoose.Types.ObjectId.isValid(userId) ? [{ _id: new mongoose.Types.ObjectId(userId) }] : []),
+        // Cek juga provider account id dan email
+        { 'accounts.providerAccountId': userId },
+        { email: userId }
+      ]
+    })
     .select('profile preferences')
-    .lean() as Pick<UserType, 'profile' | 'preferences'> | null;
-  
-  if (!user) return null;
+    .lean() as UserType | null;
+    
+    if (!user) return null;
 
-  return {
-    profile: user.profile,
-    preferences: user.preferences
-  };
-}
+    // Pastikan profile memiliki struktur yang benar
+    const profile = {
+      bio: user.profile?.bio || '',
+      institution: user.profile?.institution || '',
+      role: user.profile?.role || '',
+      expertise: user.profile?.expertise || [],
+      social: user.profile?.social || {},
+      stats: {
+        experimentsCompleted: user.profile?.stats?.experimentsCompleted || 0,
+        totalExperimentTime: user.profile?.stats?.totalExperimentTime || 0,
+        lastActive: user.profile?.stats?.lastActive || new Date()
+      }
+    };
 
-export async function createDiscussion(userId: string, data: Partial<DiscussionType>) {
-  await connectDB();
-  const discussion = new Discussion({
-    userId: new mongoose.Types.ObjectId(userId),
-    ...data,
-    metrics: { views: 0, likes: 0, replies: 0 }
-  });
-  
-  const savedDiscussion = await discussion.save();
-  return savedDiscussion.toObject();
+    // Pastikan preferences memiliki nilai default
+    const preferences = {
+      theme: user.preferences?.theme || 'system',
+      defaultLength: user.preferences?.defaultLength || 1.0,
+      defaultMass: user.preferences?.defaultMass || 0.5,
+      defaultAngle: user.preferences?.defaultAngle || 45,
+      view3D: user.preferences?.view3D || false
+    };
+
+    return {
+      profile,
+      preferences
+    };
+  } catch (error) {
+    console.error('Error in getUserProfile:', error);
+    return null;
+  }
 }
 
 export async function getDiscussions(query: Partial<DiscussionType> = {}) {

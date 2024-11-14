@@ -48,6 +48,10 @@ export const authOptions: NextAuthOptions = {
             }],
             lastLogin: currentTime,
             profile: {
+              bio: "",
+              institution: "",
+              role: "",
+              expertise: [],
               stats: {
                 experimentsCompleted: 0,
                 totalExperimentTime: 0,
@@ -65,7 +69,6 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!existingAccount) {
-            // Add new OAuth account
             dbUser.accounts.push({
               provider: account.provider,
               providerAccountId: account.providerAccountId,
@@ -74,35 +77,11 @@ export const authOptions: NextAuthOptions = {
               refresh_token: account.refresh_token,
               scope: account.scope
             });
-          } else if (account.access_token) {
-            // Update existing account tokens if needed
-            existingAccount.access_token = account.access_token;
-            existingAccount.expires_at = account.expires_at;
-            existingAccount.refresh_token = account.refresh_token;
-            existingAccount.scope = account.scope;
           }
 
           // Update login related fields
           dbUser.lastLogin = currentTime;
-          dbUser.loginAttempts = 0;
-          dbUser.lockUntil = undefined;
-          
-          // Ensure profile and stats exist and update lastActive
-          if (!dbUser.profile) {
-            dbUser.profile = {
-              stats: {
-                experimentsCompleted: 0,
-                totalExperimentTime: 0,
-                lastActive: currentTime
-              }
-            };
-          } else if (!dbUser.profile.stats) {
-            dbUser.profile.stats = {
-              experimentsCompleted: 0,
-              totalExperimentTime: 0,
-              lastActive: currentTime
-            };
-          } else {
+          if (dbUser.profile?.stats) {
             dbUser.profile.stats.lastActive = currentTime;
           }
           
@@ -115,24 +94,15 @@ export const authOptions: NextAuthOptions = {
         return false;
       }
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role;
-        token.status = (user as any).status;
-        token.profile = (user as any).profile;
-      }
-      if (account) {
-        token.accessToken = account.access_token;
       }
       return token;
     },
-    async session({ session, token }: { session: any, token: any }) {
+    async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.status = token.status;
-        session.user.profile = token.profile;
+        session.user.id = token.id as string;
       }
       return session;
     }

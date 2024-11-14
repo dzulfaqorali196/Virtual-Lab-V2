@@ -4,8 +4,6 @@ export interface User {
   _id: ObjectId;
   name: string;
   email: string;
-  password: string;
-  emailVerified?: Date;
   image?: string;
   accounts: Array<{
     provider: string;
@@ -13,37 +11,33 @@ export interface User {
     access_token?: string;
     expires_at?: number;
     refresh_token?: string;
-    token_type?: string;
     scope?: string;
   }>;
-  preferences: {
-    theme?: string;
-    defaultLength?: number;
-    defaultMass?: number;
-    defaultAngle?: number;
-    view3D?: boolean;
-    notifications: {
-      email: boolean;
-      push: boolean;
-    };
-  };
   profile: {
     bio?: string;
     institution?: string;
     role?: string;
     expertise?: string[];
-    website?: string;
-    location?: string;
     social?: {
       twitter?: string;
       linkedin?: string;
       github?: string;
     };
+    stats: {
+      experimentsCompleted: number;
+      totalExperimentTime: number;
+      lastActive: Date;
+    };
   };
-  role: 'user' | 'moderator' | 'admin';
-  status: 'active' | 'suspended' | 'banned';
+  preferences?: {
+    theme?: string;
+    defaultLength?: number;
+    defaultMass?: number;
+    defaultAngle?: number;
+    view3D?: boolean;
+  };
   lastLogin?: Date;
-  loginAttempts: number;
+  loginAttempts?: number;
   lockUntil?: Date;
   createdAt: Date;
   updatedAt: Date;
