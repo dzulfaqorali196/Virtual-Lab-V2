@@ -40,18 +40,6 @@ const nextConfig = {
     config.externals = config.externals || []
     config.externals = config.externals.filter(external => external !== 'mongoose')
     
-    // Tambahkan ini untuk menangani package yang bermasalah
-    config.module.rules.push({
-      test: /\.(js|jsx|ts|tsx)$/,
-      exclude: /node_modules/,
-      use: {
-        loader: 'babel-loader',
-        options: {
-          presets: ['next/babel']
-        }
-      }
-    })
-
     return config
   },
   // Tambahkan semua packages yang perlu ditranspile
