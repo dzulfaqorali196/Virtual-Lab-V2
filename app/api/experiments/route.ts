@@ -5,6 +5,8 @@ import { connectDB } from "@/lib/mongodb";
 import Experiment from "@/models/Experiment";
 import { saveExperimentAndUpdateStats } from "@/lib/db";
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions)

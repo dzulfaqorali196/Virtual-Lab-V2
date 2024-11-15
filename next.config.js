@@ -9,52 +9,30 @@ const nextConfig = {
   experimental: {
     serverActions: true,
   },
-  // Menambahkan konfigurasi untuk API docs
-  async redirects() {
-    return [
-      {
-        source: '/docs',
-        destination: '/api-docs',
-        permanent: true,
-      },
-    ]
-  },
-  // Menambahkan rewrite untuk API routes
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: '/api/:path*'  // Tidak perlu menambahkan /route
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        async_hooks: false,
+        'node:async_hooks': false
       }
-    ]
-  },
-  // Konfigurasi untuk swagger-ui-react
-  webpack: (config) => {
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
     }
-    config.externals = [...(config.externals || []), 'mongoose']
     
-    // Tambahkan alias untuk three-mesh-bvh
     config.resolve.alias = {
       ...config.resolve.alias,
-      'three-mesh-bvh': require.resolve('three-mesh-bvh')
+      'three-mesh-bvh': false
     }
-    
-    // Tambahkan pengecualian untuk three-mesh-bvh
-    config.module.rules.push({
-      test: /three-mesh-bvh/,
-      use: 'null-loader'
-    })
 
     return config
   },
-  // Tambahkan transpilePackages
-  transpilePackages: ['three-mesh-bvh'],
-  reactStrictMode: true
+  transpilePackages: [
+    '@radix-ui/react-progress',
+    '@radix-ui/react-primitive',
+    'three'
+  ]
 }
 
 module.exports = nextConfig
