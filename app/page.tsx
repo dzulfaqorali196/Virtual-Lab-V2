@@ -197,8 +197,12 @@ export default function Home() {
                 <ArrowRight className="ml-1.5 xs:ml-2 h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
-            <Link href="/learn" className="w-full sm:w-auto">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto text-sm xs:text-base sm:text-lg">
+            <Link href="/coming-soon" className="w-full sm:w-auto">
+              <Button 
+                variant="outline"
+                size="lg" 
+                className="w-full sm:w-auto group relative overflow-hidden"
+              >
                 Learn More
               </Button>
             </Link>
