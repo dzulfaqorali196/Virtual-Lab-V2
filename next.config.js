@@ -9,26 +9,6 @@ const nextConfig = {
   experimental: {
     serverActions: true,
   },
-  // Menambahkan konfigurasi untuk API docs
-  async redirects() {
-    return [
-      {
-        source: '/docs',
-        destination: '/api-docs',
-        permanent: true,
-      },
-    ]
-  },
-  // Menambahkan rewrite untuk API routes
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: '/api/:path*'  // Tidak perlu menambahkan /route
-      }
-    ]
-  },
-  // Konfigurasi untuk swagger-ui-react
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
@@ -37,26 +17,18 @@ const nextConfig = {
       tls: false,
     }
     
-    config.externals = config.externals || []
+    // Hapus semua externals
+    config.externals = []
     
-    // Hapus three-mesh-bvh dari externals
-    config.externals = config.externals.filter(external => 
-      external !== 'mongoose' && 
-      external !== 'three-mesh-bvh'
-    )
-    
-    // Nonaktifkan three-mesh-bvh
+    // Hapus alias yang tidak perlu
     config.resolve.alias = {
-      ...config.resolve.alias,
-      'three-mesh-bvh': false
+      ...config.resolve.alias
     }
 
     return config
   },
-  // Tambahkan semua packages yang perlu ditranspile
+  // Sederhanakan transpilePackages
   transpilePackages: [
-    'three',
-    'input-otp',
     '@radix-ui/react-progress',
     '@radix-ui/react-primitive'
   ],
