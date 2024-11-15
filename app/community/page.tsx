@@ -1,5 +1,6 @@
 "use client"
 
+import '@/app/globals.css'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ExperimentFeed } from "@/components/community/experiment-feed"
 import { DiscussionBoard } from "@/components/community/discussion-board"

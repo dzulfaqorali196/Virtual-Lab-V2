@@ -1,69 +1,117 @@
-"use client"
+import { create } from 'zustand'
+import { toast } from 'sonner'
+import { UserPreferences } from '@/types/user'
 
-import { create } from "zustand"
-import { persist } from "zustand/middleware"
-import { toast } from "sonner"
-import { useSession } from "next-auth/react"
-
-interface UserPreferences {
-  theme?: string
-  defaultLength?: number
-  defaultMass?: number
-  defaultAngle?: number
-  view3D?: boolean
-}
-
-interface PreferencesState extends UserPreferences {
+interface PreferencesStore {
+  preferences: UserPreferences
   isLoading: boolean
   error: string | null
-  setPreference: <K extends keyof UserPreferences>(
-    key: K,
-    value: UserPreferences[K]
-  ) => Promise<void>
-  loadPreferences: () => Promise<void>
+  view3D: boolean
+  fetchPreferences: () => Promise<void>
+  setPreferences: (updates: Partial<UserPreferences>) => Promise<void>
+  setPreference: (key: keyof UserPreferences, value: any) => Promise<void>
+  loadPreferences: () => Promise<UserPreferences>
+  resetPreferences: () => void
 }
 
-export const useUserPreferences = create<PreferencesState>((set) => ({
-  theme: "system",
-  defaultLength: 1.0,
-  defaultMass: 0.5,
-  defaultAngle: 45,
+const defaultPreferences: UserPreferences = {
+  theme: 'system',
   view3D: false,
+  notifications: {
+    email: true,
+    push: true
+  },
+  experimentSettings: {
+    autoSave: true,
+    showTips: true
+  },
+  simulationSettings: {
+    length: 1.7,
+    mass: 0.5,
+    angle: 45,
+    isCustom: false
+  }
+}
+
+export const useUserPreferences = create<PreferencesStore>((set, get) => ({
+  preferences: defaultPreferences,
   isLoading: false,
   error: null,
+  view3D: false,
+
+  fetchPreferences: async () => {
+    try {
+      set({ isLoading: true, error: null })
+      const response = await fetch('/api/user/preferences')
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch preferences')
+      }
+
+      const data = await response.json()
+      set({ 
+        preferences: { ...defaultPreferences, ...data },
+        view3D: data.view3D || false,
+        isLoading: false 
+      })
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to fetch preferences',
+        isLoading: false 
+      })
+      toast.error('Failed to load preferences')
+    }
+  },
+
+  setPreferences: async (updates) => {
+    try {
+      set({ isLoading: true, error: null })
+      const response = await fetch('/api/user/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update preferences')
+      }
+
+      const updatedPreferences = await response.json()
+      set({ 
+        preferences: { ...get().preferences, ...updatedPreferences },
+        view3D: updatedPreferences.view3D || false,
+        isLoading: false 
+      })
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to update preferences',
+        isLoading: false 
+      })
+      toast.error('Failed to update preferences')
+    }
+  },
 
   setPreference: async (key, value) => {
     try {
-      set({ isLoading: true });
-      const response = await fetch("/api/user/preferences", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [key]: value }),
-      });
-
-      if (!response.ok) throw new Error("Failed to update preference");
-
-      const updatedPreferences = await response.json();
-      set({ ...updatedPreferences, isLoading: false, error: null });
-      toast.success("Preferences updated");
+      const updates = { [key]: value }
+      await get().setPreferences(updates)
     } catch (error) {
-      set({ isLoading: false, error: (error as Error).message });
-      toast.error("Failed to update preferences");
+      console.error('Failed to set preference:', error)
+      throw error
     }
   },
 
   loadPreferences: async () => {
-    try {
-      set({ isLoading: true });
-      const response = await fetch("/api/user/preferences");
-      
-      if (!response.ok) throw new Error("Failed to load preferences");
-
-      const preferences = await response.json();
-      set({ ...preferences, isLoading: false, error: null });
-    } catch (error) {
-      set({ isLoading: false, error: (error as Error).message });
-      toast.error("Failed to load preferences");
-    }
+    await get().fetchPreferences()
+    return get().preferences
   },
-}))
+
+  resetPreferences: () => {
+    set({ 
+      preferences: defaultPreferences,
+      view3D: false,
+      isLoading: false,
+      error: null 
+    })
+  }
+})) 

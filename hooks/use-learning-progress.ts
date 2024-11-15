@@ -1,83 +1,65 @@
-"use client"
+import { create } from 'zustand'
 
-import { create } from "zustand"
-import { toast } from "sonner"
-
-interface Progress {
+interface LearningProgress {
   completedSections: string[]
-  quizScores: Record<string, number>
-}
-
-interface LearningState extends Progress {
+  quizScores: { [key: string]: number }
   isLoading: boolean
-  error: string | null
   setProgress: (lessonId: string, sectionId: string, score: number) => Promise<void>
   loadProgress: () => Promise<void>
 }
 
-export const useLearningProgress = create<LearningState>((set, get) => ({
+export const useLearningProgress = create<LearningProgress>((set) => ({
   completedSections: [],
   quizScores: {},
   isLoading: false,
-  error: null,
 
   setProgress: async (lessonId: string, sectionId: string, score: number) => {
     try {
-      set({ isLoading: true });
-      const sectionKey = `${lessonId}-${sectionId}`;
+      const sectionKey = `${lessonId}-${sectionId}`
       
-      const response = await fetch("/api/user/learning-progress", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/learning/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          completedSections: [...get().completedSections, sectionKey],
-          quizScores: {
-            ...get().quizScores,
-            [sectionKey]: score
-          }
+          sectionKey,
+          score
         })
-      });
+      })
 
-      if (!response.ok) throw new Error("Failed to save progress");
+      if (!response.ok) {
+        throw new Error('Failed to save progress')
+      }
 
-      const data = await response.json();
-      set({
-        completedSections: data.completedSections,
-        quizScores: data.quizScores,
-        isLoading: false,
-        error: null
-      });
-      
-      toast.success("Progress saved");
+      set((state) => ({
+        completedSections: [...state.completedSections, sectionKey],
+        quizScores: {
+          ...state.quizScores,
+          [sectionKey]: score
+        }
+      }))
     } catch (error) {
-      set({ 
-        isLoading: false,
-        error: (error as Error).message 
-      });
-      toast.error("Failed to save progress");
+      console.error('Failed to save progress:', error)
     }
   },
 
   loadProgress: async () => {
     try {
-      set({ isLoading: true });
-      const response = await fetch("/api/user/learning-progress");
+      set({ isLoading: true })
+      const response = await fetch('/api/learning/progress')
       
-      if (!response.ok) throw new Error("Failed to load progress");
+      if (!response.ok) {
+        throw new Error('Failed to load progress')
+      }
 
-      const data = await response.json();
-      set({ 
+      const data = await response.json()
+      set({
         completedSections: data.completedSections || [],
         quizScores: data.quizScores || {},
-        isLoading: false,
-        error: null 
-      });
+        isLoading: false
+      })
     } catch (error) {
-      set({ 
-        isLoading: false,
-        error: (error as Error).message 
-      });
-      toast.error("Failed to load progress");
+      console.error('Failed to load progress:', error)
+      set({ isLoading: false })
     }
   }
-}))
+})) 

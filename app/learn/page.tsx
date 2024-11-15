@@ -1,3 +1,4 @@
+import '@/app/globals.css'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { LearningContent } from "@/components/learning/learning-content"
 import { VideoTutorials } from "@/components/learning/video-tutorials"

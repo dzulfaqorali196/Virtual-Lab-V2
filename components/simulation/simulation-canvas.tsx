@@ -5,8 +5,8 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Box, Square } from "lucide-react"
 import { useSession } from "next-auth/react"
-import { useUserPreferences } from "@/hooks/use-user-preferences"
 import dynamic from "next/dynamic"
+import { useUserPreferences } from "@/hooks/use-user-preferences"
 
 const PendulumCanvas2D = dynamic(
   () => import("./pendulum-canvas-2d").then(mod => mod.PendulumCanvas2D),

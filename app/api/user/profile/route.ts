@@ -1,135 +1,198 @@
-import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
-import { updateUserProfile, getUserProfile } from "@/lib/db"
-import { z } from "zod"
-import mongoose from "mongoose"
+// app/api/user/profile/route.ts
 
-// Validation schema for profile data with custom error messages
-const profileSchema = z.object({
-  bio: z.string().max(500, {
-    message: "Bio cannot be longer than 500 characters"
-  }).optional(),
-  institution: z.string().max(100, {
-    message: "Institution name cannot be longer than 100 characters"
-  }).optional(),
-  role: z.string().max(50, {
-    message: "Role cannot be longer than 50 characters"
-  }).optional(),
-  expertise: z.array(z.string().max(30, {
-    message: "Each expertise cannot be longer than 30 characters"
-  })).max(5, {
-    message: "You can only add up to 5 areas of expertise"
-  }).optional(),
-  social: z.object({
-    twitter: z.string().url({ message: "Invalid Twitter URL" }).optional().or(z.literal("")),
-    linkedin: z.string().url({ message: "Invalid LinkedIn URL" }).optional().or(z.literal("")),
-    github: z.string().url({ message: "Invalid GitHub URL" }).optional().or(z.literal(""))
-  }).optional()
-})
+import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { connectDB } from '@/lib/mongodb'
+import User from '@/models/User'
+import { error } from 'console'
 
-// Helper function for error responses
-const errorResponse = (message: string, status: number = 400) => {
-  return NextResponse.json(
-    { error: message },
-    { status }
-  )
+// Sesuaikan dengan schema
+interface UserProfile {
+  bio?: string
+  institution?: string
+  role?: string
+  expertise?: string[]
+  social?: {
+    twitter?: string
+    linkedin?: string
+    github?: string
+  }
+  achievements?: Array<{
+    id: string
+    name: string
+    description: string
+    earnedAt: Date
+  }>
+  stats?: {
+    experimentsCompleted: number
+    totalExperimentTime: number
+    lastActive: Date
+  }
 }
 
-// GET: Fetch user profile
-export async function GET() {
-    try {
-      const session = await getServerSession(authOptions)
-      if (!session?.user?.id) {
-        return errorResponse("Unauthorized", 401)
-      }
-  
-      const profile = await getUserProfile(session.user.id)
-      if (!profile) {
-        // Cek apakah ini karena invalid ID atau memang tidak ditemukan
-        if (!mongoose.Types.ObjectId.isValid(session.user.id)) {
-          console.warn('Invalid ObjectId format:', session.user.id);
-        }
-        return errorResponse("Profile not found", 404)
-      }
-  
-      return NextResponse.json(profile)
-    } catch (error) {
-      console.error("Error fetching profile:", error)
-      // Handle specific MongoDB errors
-      if (error instanceof mongoose.Error.CastError) {
-        return errorResponse("Invalid user ID format", 400)
-      }
-      return errorResponse(
-        "An error occurred while fetching profile",
-        500
-      )
-    }
-  }
+interface UserDocument {
+  _id: string
+  name?: string
+  email: string
+  image?: string
+  profile?: UserProfile
+  userRole: 'user' | 'admin'
+  status: 'active' | 'suspended'
+}
 
-// PUT: Update user profile
+// Tambahkan interface untuk validation error
+interface ValidationError {
+  message: string;
+  errors: { [key: string]: { message: string } };
+  name: string;
+}
+
+// Tambahkan type untuk update data
+interface ProfileUpdateData {
+  'profile.bio'?: string;
+  'profile.institution'?: string;
+  'profile.role'?: string;
+  'profile.expertise'?: string[];
+  'profile.social'?: {
+    twitter: string;
+    linkedin: string;
+    github: string;
+  };
+  [key: string]: any; // Untuk memungkinkan dynamic keys
+}
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user?.email) {
+      console.log('No session or user email')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    await connectDB()
+    
+    const user = await User.findOne({ email: session.user.email })
+                          .select('profile name email image userRole status')
+                          .lean() as UserDocument | null
+
+    if (!user) {
+      console.log('User not found in database')
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({
+      profile: {
+        ...user.profile,
+        name: user.name,
+        email: user.email,
+        image: user.image,
+        userRole: user.userRole,
+        role: user.profile?.role,
+        status: user.status,
+        stats: user.profile?.stats || {
+          experimentsCompleted: 0,
+          totalExperimentTime: 0,
+          lastActive: new Date()
+        }
+      }
+    })
+  } catch (error) {
+    console.error('Profile fetch error:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to fetch profile' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function PUT(req: Request) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return errorResponse("Unauthorized", 401)
+    
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Validate content type
-    const contentType = req.headers.get("content-type")
-    if (!contentType?.includes("application/json")) {
-      return errorResponse("Invalid content type. Expected application/json")
-    }
+    await connectDB()
+    const data = await req.json()
+    
+    // Filter empty social links
+    const social = data.social ? {
+      twitter: data.social.twitter || '',
+      linkedin: data.social.linkedin || '',
+      github: data.social.github || ''
+    } : undefined
 
-    // Parse and validate request body
-    const body = await req.json()
-    const validatedData = profileSchema.safeParse(body)
-
-    if (!validatedData.success) {
-      return NextResponse.json({
-        error: "Invalid data",
-        details: validatedData.error.issues.map(issue => ({
-          path: issue.path.join("."),
-          message: issue.message
-        }))
-      }, { status: 400 })
-    }
-
-    // Remove empty strings from social URLs
-    if (validatedData.data.social) {
-      Object.keys(validatedData.data.social).forEach(key => {
-        const k = key as keyof typeof validatedData.data.social
-        if (validatedData.data.social![k] === "") {
-          delete validatedData.data.social![k]
-        }
+    const updateData: ProfileUpdateData = {
+      'profile.bio': data.bio,
+      'profile.institution': data.institution,
+      'profile.role': data.role,
+      'profile.expertise': data.expertise,
+      ...(social && {
+        'profile.social': social
       })
     }
 
-    // Update profile in database
-    const updatedProfile = await updateUserProfile(
-      session.user.id,
-      validatedData.data
-    )
+    // Remove undefined/null values
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) {
+        delete updateData[key]
+      }
+    })
 
-    if (!updatedProfile) {
-      return errorResponse("Failed to update profile")
+    const user = await User.findOneAndUpdate(
+      { email: session.user.email },
+      { $set: updateData },
+      { 
+        new: true, 
+        runValidators: true,
+        select: 'profile name email image userRole status'
+      }
+    ).lean() as UserDocument | null
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    return NextResponse.json(updatedProfile)
-  } catch (error) {
-    console.error("Error updating profile:", error)
+    return NextResponse.json({
+      profile: {
+        ...user.profile,
+        name: user.name,
+        email: user.email,
+        image: user.image,
+        userRole: user.userRole,
+        role: user.profile?.role,
+        status: user.status,
+        stats: user.profile?.stats || {
+          experimentsCompleted: 0,
+          totalExperimentTime: 0,
+          lastActive: new Date()
+        }
+      }
+    })
+  } catch (error: unknown) {
+    console.error('Profile update error:', error)
     
-    // Handle specific error types
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        error: "Validation failed",
-        details: error.issues
+    // Handle mongoose validation errors
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'ValidationError') {
+      const validationError = error as ValidationError
+      const validationErrors = Object.values(validationError.errors)
+        .map(err => err.message)
+      
+      return NextResponse.json({ 
+        error: 'Validation failed',
+        message: validationErrors.join('. '),
+        validationErrors
       }, { status: 400 })
     }
 
-    return errorResponse(
-      "An error occurred while updating profile",
-      500
+    return NextResponse.json(
+      { 
+        error: error instanceof Error ? error.message : 'Failed to update profile' 
+      },
+      { status: 500 }
     )
   }
 }

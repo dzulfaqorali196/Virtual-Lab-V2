@@ -10,10 +10,8 @@ import {
 } from "@/components/ui/accordion"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Button } from "@/components/ui/button"
 import { QuizSection } from "@/components/learning/quiz-section"
 import { CheckCircle2, GraduationCap } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { useLearningProgress } from "@/hooks/use-learning-progress"
 
 interface QuizQuestion {

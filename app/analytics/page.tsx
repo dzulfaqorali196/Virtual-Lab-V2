@@ -1,3 +1,4 @@
+import '@/app/globals.css'
 import { AnalyticsDashboard } from "@/components/analytics/analytics-dashboard"
 import { ExperimentHistory } from "@/components/analytics/experiment-history"
 import { DataExport } from "@/components/analytics/data-export"

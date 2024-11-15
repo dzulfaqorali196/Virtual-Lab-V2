@@ -1,131 +1,162 @@
-import { create } from "zustand"
-import { toast } from "sonner"
-import { z } from "zod"
+'use client'
 
-// Validation schema
-const profileSchema = z.object({
-  bio: z.string().max(500).optional(),
-  institution: z.string().max(100).optional(),
-  role: z.string().max(50).optional(),
-  expertise: z.array(z.string().max(30)).max(5).optional(),
-  social: z.object({
-    twitter: z.string().url().optional().or(z.literal("")),
-    linkedin: z.string().url().optional().or(z.literal("")),
-    github: z.string().url().optional().or(z.literal(""))
-  }).optional()
-})
+import { create } from 'zustand'
+import { UserProfile, ProfileUpdateData, UserStats } from '@/types/user'
+import { useSession } from 'next-auth/react'
+import { useEffect } from 'react'
 
-interface UserStats {
-  experimentsCompleted: number;
-  totalExperimentTime: number;
-  lastActive: number;
-}
-
-export interface UserProfile {
-  bio?: string;
-  institution?: string;
-  role?: string;
-  expertise?: string[];
-  achievements?: Array<{
-    id: string;
-    name: string;
-    description: string;
-    earnedAt: number;
-  }>;
-  stats: UserStats;
-  social?: {
-    twitter?: string;
-    linkedin?: string;
-    github?: string;
-  };
+interface ValidationError {
+  message: string;
+  validationErrors?: string[];
 }
 
 interface ProfileState {
-  bio?: string;
-  institution?: string;
-  role?: string;
-  expertise?: string[];
-  achievements?: UserProfile['achievements'];
-  stats?: UserStats;
-  social?: UserProfile['social'];
+  profile: UserProfile | null;
+  stats: UserStats | null;
   isLoading: boolean;
   error: string | null;
-  updateProfile: (data: Partial<UserProfile>) => Promise<void>;
-  loadProfile: () => Promise<void>;
-  resetState: () => void;
+  lastUpdate: number | null;
+  fetchProfile: () => Promise<void>;
+  updateProfile: (data: ProfileUpdateData) => Promise<void>;
+  resetProfile: () => void;
+  setError: (error: string | null) => void;
 }
 
-export const useUserProfile = create<ProfileState>((set) => ({
+export const useUserProfile = create<ProfileState>((set, get) => ({
+  profile: null,
+  stats: null,
   isLoading: false,
   error: null,
+  lastUpdate: null,
 
-  updateProfile: async (data) => {
+  fetchProfile: async () => {
+    const currentState = get()
+    // Prevent multiple simultaneous fetches
+    if (currentState.isLoading) return
+
+    // Cache control - only fetch if data is stale (5 minutes)
+    const now = Date.now()
+    if (currentState.lastUpdate && now - currentState.lastUpdate < 300000) {
+      return
+    }
+
     try {
-      // Validate data before sending
-      const validatedData = profileSchema.parse(data);
+      set({ isLoading: true, error: null })
+      const response = await fetch('/api/user/profile', {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      })
       
-      set({ isLoading: true, error: null });
-      const response = await fetch("/api/user/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(validatedData),
-      });
-
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update profile");
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch profile')
       }
 
-      const updatedProfile = await response.json();
-      set({ 
-        ...updatedProfile, 
-        isLoading: false, 
-        error: null 
-      });
+      const data = await response.json()
       
-      toast.success("Profile updated successfully");
+      if (!data || !data.profile) {
+        throw new Error('Invalid profile data')
+      }
+
+      set({ 
+        profile: data.profile,
+        stats: data.profile?.stats || null,
+        isLoading: false,
+        lastUpdate: now
+      })
+
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to update profile";
-      set({ isLoading: false, error: errorMessage });
-      toast.error(errorMessage);
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to fetch profile',
+        isLoading: false 
+      })
+      throw error
     }
   },
 
-  loadProfile: async () => {
+  updateProfile: async (data: ProfileUpdateData) => {
     try {
-      set({ isLoading: true, error: null });
-      const response = await fetch("/api/user/profile");
-      
+      set({ isLoading: true, error: null })
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+
+      const result = await response.json()
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to load profile");
+        // Handle validation errors
+        if ('validationErrors' in result) {
+          const validationError = result as ValidationError
+          throw new Error(validationError.message || validationError.validationErrors?.join('. '))
+        }
+        throw new Error(result.error || 'Failed to update profile')
       }
 
-      const profile = await response.json();
       set({ 
-        ...profile, 
-        isLoading: false, 
-        error: null 
-      });
+        profile: result.profile,
+        stats: result.profile?.stats || null,
+        isLoading: false,
+        lastUpdate: Date.now()
+      })
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to load profile";
-      set({ isLoading: false, error: errorMessage });
-      toast.error(errorMessage);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile'
+      set({
+        error: errorMessage,
+        isLoading: false
+      })
+      throw error // Re-throw untuk handling di komponen
     }
   },
 
-  // Reset state when logging out
-  resetState: () => {
-    set({
-      bio: undefined,
-      institution: undefined,
-      role: undefined,
-      expertise: undefined,
-      achievements: undefined,
-      stats: undefined,
-      social: undefined,
-      isLoading: false,
-      error: null
-    });
-  }
+  resetProfile: () => {
+    set({ 
+      profile: null,
+      stats: null,
+      isLoading: false, 
+      error: null,
+      lastUpdate: null
+    })
+  },
+
+  setError: (error: string | null) => set({ error })
 }));
+
+// Hook untuk auto sync dengan session
+export function useProfileSync() {
+  const { data: session, status } = useSession()
+  const resetProfile = useUserProfile(state => state.resetProfile)
+  const fetchProfile = useUserProfile(state => state.fetchProfile)
+
+  useEffect(() => {
+    let mounted = true
+    let retryTimeout: NodeJS.Timeout
+
+    async function syncProfile() {
+      if (status === 'loading') return
+
+      if (session?.user && mounted) {
+        try {
+          await fetchProfile()
+        } catch (error) {
+          // Retry fetch after 5 seconds on error
+          retryTimeout = setTimeout(() => {
+            if (mounted) syncProfile()
+          }, 5000)
+        }
+      } else if (!session?.user && mounted) {
+        resetProfile()
+      }
+    }
+
+    syncProfile()
+
+    return () => {
+      mounted = false
+      if (retryTimeout) clearTimeout(retryTimeout)
+    }
+  }, [session, status, fetchProfile, resetProfile])
+}

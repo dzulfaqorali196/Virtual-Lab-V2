@@ -1,5 +1,6 @@
 "use client"
 
+import '@/app/globals.css'
 import { SimulationCanvas } from "@/components/simulation/simulation-canvas"
 import { SimulationControls } from "@/components/simulation/simulation-controls"
 import { SimulationData } from "@/components/simulation/simulation-data"
