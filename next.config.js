@@ -40,10 +40,17 @@ const nextConfig = {
     config.externals = config.externals || []
     config.externals = config.externals.filter(external => external !== 'mongoose')
     
+    // Tambahkan ini untuk menangani three-mesh-bvh
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'three-mesh-bvh': false
+    }
+
     return config
   },
   // Tambahkan semua packages yang perlu ditranspile
   transpilePackages: [
+    'three',
     'input-otp',
     '@radix-ui/react-progress',
     '@radix-ui/react-primitive'
