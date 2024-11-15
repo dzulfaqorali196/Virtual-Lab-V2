@@ -41,19 +41,20 @@ const nextConfig = {
     // Tambahkan alias untuk three-mesh-bvh
     config.resolve.alias = {
       ...config.resolve.alias,
-      'three-mesh-bvh': require.resolve('three-mesh-bvh')
+      'three-mesh-bvh': require.resolve('three-mesh-bvh'),
+      'input-otp': require.resolve('input-otp')
     }
     
-    // Tambahkan pengecualian untuk three-mesh-bvh
+    // Tambahkan rule untuk input-otp
     config.module.rules.push({
-      test: /three-mesh-bvh/,
+      test: /input-otp/,
       use: 'null-loader'
     })
 
     return config
   },
   // Tambahkan transpilePackages
-  transpilePackages: ['three-mesh-bvh'],
+  transpilePackages: ['three-mesh-bvh', 'input-otp'],
   reactStrictMode: true
 }
 
