@@ -40,17 +40,17 @@ const nextConfig = {
     // Hapus mongoose dari externals
     config.externals = config.externals.filter(external => external !== 'mongoose')
     
-    // Tambahkan transpilasi untuk semua packages yang bermasalah
-    config.module.rules.push({
-      test: /node_modules\/@radix-ui\/react-progress|input-otp/,
-      use: 'null-loader'
-    })
+    // Tambahkan alias untuk three dan three-mesh-bvh
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'three': require.resolve('three'),
+      'three-mesh-bvh': false // Disable three-mesh-bvh
+    }
 
     return config
   },
   // Tambahkan semua packages yang perlu ditranspile
   transpilePackages: [
-    'three-mesh-bvh',
     'input-otp',
     '@radix-ui/react-progress',
     '@radix-ui/react-primitive'
