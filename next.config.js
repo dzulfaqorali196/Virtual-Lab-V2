@@ -37,13 +37,27 @@ const nextConfig = {
       tls: false,
     }
     
+    // Hapus externals yang tidak perlu
     config.externals = config.externals || []
     config.externals = config.externals.filter(external => external !== 'mongoose')
     
-    // Tambahkan ini untuk menangani three-mesh-bvh
+    // Tambahkan alias dan module rules untuk three.js
     config.resolve.alias = {
       ...config.resolve.alias,
+      'three': require.resolve('three'),
       'three-mesh-bvh': false
+    }
+
+    config.module = {
+      ...config.module,
+      exprContextCritical: false,
+      rules: [
+        ...config.module.rules,
+        {
+          test: /three-mesh-bvh/,
+          use: 'null-loader'
+        }
+      ]
     }
 
     return config
