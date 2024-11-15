@@ -36,7 +36,7 @@ A comprehensive web-based virtual physics laboratory for interactive pendulum ex
 
 ## Overview
 
-Virtual Physics Lab is an interactive web application designed to help students learn physics through hands-on virtual experiments, focusing on pendulum motion and related concepts. The project was developed as part of ITB TPB (Tahap Persiapan Bersama) coursework.
+Virtual Physics Lab adalah aplikasi web interaktif yang dirancang untuk membantu siswa belajar fisika melalui eksperimen virtual, dengan fokus pada gerak bandul dan konsep terkait. Proyek ini dikembangkan sebagai bagian dari mata kuliah Pengembangan Aplikasi Web dan Mobile di ITB.
 
 ## Developer Contact
 
@@ -63,39 +63,22 @@ Virtual Physics Lab is an interactive web application designed to help students 
 ## Features
 
 ### 1. Interactive Simulation
-- Real-time pendulum simulation with adjustable parameters
-- Support for both 2D and 3D visualization modes
-- Dynamic parameter controls for length, mass, and initial angle
-- Real-time data visualization and measurements
+- Simulasi bandul real-time dengan parameter yang dapat disesuaikan
+- Visualisasi 3D dengan Three.js
+- Kontrol parameter dinamis untuk panjang, massa, dan sudut awal
+- Visualisasi data real-time
 
-### 2. Learning Management
-- Structured learning modules with interactive content
-- Video tutorials and explanations
-- Progressive learning with quizzes and assessments
-- Progress tracking and achievements
+### 2. Analytics Dashboard
+- Analisis eksperimen terperinci
+- Visualisasi data historis
+- Metrik performa dan statistik
+- Fungsionalitas ekspor data
 
-### 3. Analytics Dashboard
-- Detailed experiment analysis
-- Historical data visualization
-- Performance metrics and statistics
-- Data export functionality
-
-### 4. Community Features
-- Experiment sharing
-- Discussion boards
-- User leaderboards
-- Social interaction between learners
-
-### 5. User Management
-- OAuth authentication (Google, GitHub)
-- User profiles and preferences
-- Progress tracking
-- Customizable settings
-
-### 6. UI
-- Responsive
-- Dark Mode Available
-- Mobile Friendly
+### 3. User Management
+- Autentikasi OAuth (Google)
+- Profil pengguna dan preferensi
+- Pelacakan progres
+- Pengaturan yang dapat disesuaikan
 
 ## Project Highlights
 
@@ -150,21 +133,37 @@ project/
 │   │   ├── auth/         # Authentication endpoints
 │   │   └── user/         # User-related endpoints
 │   ├── auth/             # Authentication pages
+│   ├── coming-soon/      # Coming soon page
 │   ├── profile/          # User profile pages
 │   ├── simulation/       # Pendulum simulation
-│   ├── learn/           # Learning modules
 │   ├── analytics/       # Data analysis
 │   └── community/       # Community features
 ├── components/           # React components
 │   ├── analytics/       # Analytics components
+│   │   ├── analytics-dashboard.tsx
+│   │   └── experiment-history.tsx
 │   ├── auth/           # Authentication components
 │   ├── simulation/     # Simulation components
-│   ├── ui/            # UI components
-│   └── ...
+│   │   ├── pendulum-canvas-3d.tsx
+│   │   ├── simulation-controls.tsx
+│   │   └── simulation-parameters.tsx
+│   └── ui/            # Shadcn UI components
 ├── hooks/              # Custom React hooks
+│   ├── use-experiments.ts
+│   ├── use-pendulum.ts
+│   └── use-user-preferences.ts
 ├── lib/               # Utility functions
+│   ├── db.ts         # Database functions
+│   ├── mongodb.ts    # MongoDB connection
+│   └── utils.ts      # Helper functions
 ├── models/            # MongoDB schemas
+│   ├── Experiment.ts
+│   └── User.ts
 └── types/             # TypeScript definitions
+    ├── experiment.ts
+    └── user.ts
+
+note : untuk detail lebih lanjut, silahkan lihat langsung di project
 ```
 
 ## Key Components
@@ -256,27 +255,24 @@ The application is designed to be deployed as follows:
 ## Implementation Status
 
 ### Completed Features
-- ✅ User authentication and authorization
-- ✅ Pendulum simulation (2D/3D)
-- ✅ Interactive learning modules
-- ✅ Community features
-- ✅ Analytics dashboard
-- ✅ Responsive design
+- ✅ Autentikasi pengguna
+- ✅ Simulasi bandul 3D
+- ✅ Dashboard analitik
+- ✅ Desain responsif
+- ✅ Ekspor data eksperimen
+- ✅ Preferensi pengguna
 
 ### Pending Implementation
-- ⏳ Complete state persistence for quiz results
-- ⏳ Expanded experiment types
-- ⏳ Advanced analytics features
-- ⏳ Real-time collaboration features
+- ⏳ Tipe eksperimen tambahan
+- ⏳ Fitur analitik lanjutan
+- ⏳ Fitur kolaborasi real-time
+- ⏳ Integrasi pembelajaran
 
 ## Future Roadmap
-
-- 📱 Mobile application development
-- 🤝 Real-time collaboration features
-- 🔍 Advanced search functionality
-- 🌐 Multi-language support
-- 🤖 AI-powered learning assistance
-- 📊 Enhanced analytics dashboard
+- 📱 Pengembangan aplikasi mobile
+- 🔍 Fungsionalitas pencarian lanjutan
+- 🌐 Dukungan multi-bahasa
+- 📊 Dashboard analitik yang ditingkatkan
 
 ## Contributing
 
