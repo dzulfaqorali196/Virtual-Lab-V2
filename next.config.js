@@ -4,7 +4,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: { 
-    domains: ['images.unsplash.com'],
+    domains: ['images.unsplash.com', 'lh3.googleusercontent.com'],
   },
   experimental: {
     serverActions: true,
@@ -36,8 +36,10 @@ const nextConfig = {
       net: false,
       tls: false,
     }
+    config.externals = [...(config.externals || []), 'mongoose']
     return config
   },
+  reactStrictMode: true
 }
 
 module.exports = nextConfig
