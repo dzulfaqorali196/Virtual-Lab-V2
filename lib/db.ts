@@ -313,11 +313,26 @@ interface LearningProgress {
   };
 }
 
+// Update interface untuk hasil lean query
+interface LeanUserDocument {
+  _id: unknown;
+  email: string;
+  profile?: {
+    learningProgress?: {
+      completedSections: string[];
+      quizScores: {
+        [key: string]: number;
+      };
+    };
+  };
+  __v: number;
+}
+
 export async function getLearningProgress(userId: string) {
   try {
     const user = await User.findOne({ email: userId })
       .select('profile.learningProgress')
-      .lean();
+      .lean() as LeanUserDocument;
 
     if (!user?.profile?.learningProgress) {
       return {
@@ -351,7 +366,7 @@ export async function updateLearningProgress(
           upsert: true,
           select: 'profile.learningProgress'
         }
-      ).lean();
+      ).lean() as LeanUserDocument;
 
       if (!user) {
         throw new Error('User not found');
