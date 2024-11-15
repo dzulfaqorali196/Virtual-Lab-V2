@@ -87,6 +87,7 @@
     "eslint-config-next": "13.5.1",
     "eslint-plugin-react": "^7.37.2",
     "globals": "^15.12.0",
+    "null-loader": "^4.0.1",
     "typescript-eslint": "^8.14.0"
   }
 }
