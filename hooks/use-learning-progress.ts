@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { useSession } from 'next-auth/react'
 import { toast } from 'sonner'
 
 interface LearningProgress {
