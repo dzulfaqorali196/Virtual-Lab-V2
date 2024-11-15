@@ -256,11 +256,12 @@ export async function updateUserPreferences(userId: string, preferences: Partial
           lean: true 
         }
       ) as UserWithProfile | null
-
+      
       if (!user) {
         throw new Error('User not found')
       }
 
+      // Return default preferences jika tidak ada
       return user.profile?.preferences || {
         theme: "system",
         defaultLength: 1.0,
