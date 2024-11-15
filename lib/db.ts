@@ -304,6 +304,70 @@ export async function saveExperimentAndUpdateStats(experimentData: any) {
   });
 }
 
+// Tambahkan interface untuk learning progress
+interface LearningProgress {
+  userId: string;
+  completedSections: string[];
+  quizScores: {
+    [key: string]: number;
+  };
+}
+
+export async function getLearningProgress(userId: string) {
+  try {
+    const user = await User.findOne({ email: userId })
+      .select('profile.learningProgress')
+      .lean();
+
+    if (!user?.profile?.learningProgress) {
+      return {
+        completedSections: [],
+        quizScores: {}
+      };
+    }
+
+    return user.profile.learningProgress;
+  } catch (error) {
+    console.error('Error getting learning progress:', error);
+    throw error;
+  }
+}
+
+export async function updateLearningProgress(
+  userId: string,
+  sectionId: string,
+  score: number
+) {
+  return withRetry(async () => {
+    try {
+      const user = await User.findOneAndUpdate(
+        { email: userId },
+        {
+          $addToSet: { 'profile.learningProgress.completedSections': sectionId },
+          $set: { [`profile.learningProgress.quizScores.${sectionId}`]: score }
+        },
+        { 
+          new: true,
+          upsert: true,
+          select: 'profile.learningProgress'
+        }
+      ).lean();
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      return user.profile?.learningProgress || {
+        completedSections: [sectionId],
+        quizScores: { [sectionId]: score }
+      };
+    } catch (error) {
+      console.error('Error updating learning progress:', error);
+      throw error;
+    }
+  });
+}
+
 // Connection health monitoring
 let isHealthy = true
 mongoose.connection.on('disconnected', () => {
