@@ -1,18 +1,8 @@
 "use client"
 
-import { ErrorBoundary } from 'react-error-boundary'
-
-function ErrorFallback({error}: {error: Error}) {
-  return (
-    <div className="text-red-500">
-      <p>Something went wrong:</p>
-      <pre>{error.message}</pre>
-    </div>
-  )
-}
-
 import { useEffect } from "react"
 import { useSession } from "next-auth/react"
+import { ErrorBoundary } from 'react-error-boundary'
 import {
   Accordion,
   AccordionContent,
@@ -24,6 +14,15 @@ import { Progress } from "@/components/ui/progress"
 import { QuizSection } from "@/components/learning/quiz-section"
 import { CheckCircle2, GraduationCap } from "lucide-react"
 import { useLearningProgress } from "@/hooks/use-learning-progress"
+
+function ErrorFallback({error}: {error: Error}) {
+  return (
+    <div className="text-red-500">
+      <p>Something went wrong:</p>
+      <pre>{error.message}</pre>
+    </div>
+  )
+}
 
 interface QuizQuestion {
   id: string
