@@ -126,6 +126,14 @@ const UserSchema = new mongoose.Schema({
         default: 0,
         min: 0
       },
+      avgDuration: {
+        type: Number,
+        default: 0
+      },
+      avgAngle: {
+        type: Number,
+        default: 0
+      },
       lastActive: { 
         type: Date, 
         default: Date.now 
@@ -147,11 +155,38 @@ const UserSchema = new mongoose.Schema({
     required: true 
   },
   preferences: {
-    theme: { type: String, enum: ['light', 'dark', 'system'], default: 'system' },
-    notifications: { type: Boolean, default: true },
+    theme: {
+      type: String,
+      enum: ['light', 'dark', 'system'],
+      default: 'system'
+    },
     experimentSettings: {
-      autoSave: { type: Boolean, default: true },
-      showTips: { type: Boolean, default: true }
+      type: Object,
+      default: {
+        notifications: true
+      }
+    }
+  },
+  stats: {
+    experimentsCompleted: {
+      type: Number,
+      default: 0
+    },
+    totalExperimentTime: {
+      type: Number,
+      default: 0
+    },
+    avgDuration: {
+      type: Number,
+      default: 0
+    },
+    avgAngle: {
+      type: Number,
+      default: 0
+    },
+    lastActive: {
+      type: Date,
+      default: Date.now
     }
   }
 }, {

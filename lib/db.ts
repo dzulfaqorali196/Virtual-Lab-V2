@@ -198,27 +198,46 @@ export async function getUserExperiments(userId: string) {
   }
 }
 
-export async function getExperimentStats(userId: string) {
+// Tambahkan interface untuk stats
+interface ExperimentStats {
+  experimentsCompleted: number;
+  totalExperimentTime: number;
+  avgDuration: number;
+  avgAngle: number;
+  lastActive: Date;
+}
+
+export async function getExperimentStats(userId: string): Promise<ExperimentStats> {
   try {
     const stats = await Experiment.aggregate([
       { $match: { userId } },
-      { 
+      {
         $group: {
           _id: null,
-          totalExperiments: { $sum: 1 },
+          experimentsCompleted: { $sum: 1 },
+          totalExperimentTime: { $sum: '$duration' },
           avgDuration: { $avg: '$duration' },
-          avgAngle: { $avg: '$parameters.angle' },
-          totalTime: { $sum: '$duration' }
+          avgAngle: { $avg: '$parameters.angle' }
         }
       }
     ]);
 
-    return stats[0] || {
-      totalExperiments: 0,
+    // Default stats jika belum ada experiment
+    const defaultStats: ExperimentStats = {
+      experimentsCompleted: 0,
+      totalExperimentTime: 0,
       avgDuration: 0,
       avgAngle: 0,
-      totalTime: 0
+      lastActive: new Date()
     };
+
+    return stats[0] ? {
+      experimentsCompleted: stats[0].experimentsCompleted,
+      totalExperimentTime: stats[0].totalExperimentTime,
+      avgDuration: stats[0].avgDuration,
+      avgAngle: stats[0].avgAngle,
+      lastActive: new Date()
+    } : defaultStats;
   } catch (error) {
     console.error('Error getting experiment stats:', error);
     throw error;
@@ -258,6 +277,30 @@ export async function updateUserPreferences(userId: string, preferences: Partial
       throw error
     }
   })
+}
+
+export async function saveExperimentAndUpdateStats(experimentData: any) {
+  return withTransaction(async (session) => {
+    // Simpan experiment
+    const experiment = new Experiment(experimentData);
+    await experiment.save({ session });
+
+    // Dapatkan stats terbaru
+    const stats = await getExperimentStats(experimentData.userId);
+
+    // Update user stats
+    await User.findOneAndUpdate(
+      { email: experimentData.userId },
+      { 
+        $set: { 
+          'profile.stats': stats
+        }
+      },
+      { session }
+    );
+
+    return experiment;
+  });
 }
 
 // Connection health monitoring

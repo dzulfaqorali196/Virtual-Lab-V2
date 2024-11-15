@@ -3,36 +3,28 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/lib/mongodb";
 import Experiment from "@/models/Experiment";
+import { saveExperimentAndUpdateStats } from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
-    await connectDB();
-    const session = await getServerSession(authOptions);
-    
+    const session = await getServerSession(authOptions)
     if (!session?.user?.email) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const data = await req.json();
-    
-    const experiment = new Experiment({
+    await connectDB()
+    const data = await req.json()
+    const experiment = await saveExperimentAndUpdateStats({
       ...data,
-      userId: session.user.email,
-      timestamp: new Date()
-    });
+      userId: session.user.email
+    })
     
-    await experiment.save();
-
-    return NextResponse.json(experiment);
+    return NextResponse.json({ success: true, experiment })
   } catch (error) {
-    console.error('Create experiment error:', error);
-    return NextResponse.json(
-      { error: "Failed to save experiment" },
-      { status: 500 }
-    );
+    console.error('Error saving experiment:', error)
+    return NextResponse.json({ 
+      error: 'Failed to save experiment' 
+    }, { status: 500 })
   }
 }
 
