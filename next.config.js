@@ -37,15 +37,20 @@ const nextConfig = {
       tls: false,
     }
     
-    // Hapus mongoose dari externals
+    config.externals = config.externals || []
     config.externals = config.externals.filter(external => external !== 'mongoose')
     
-    // Tambahkan alias untuk three dan three-mesh-bvh
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'three': require.resolve('three'),
-      'three-mesh-bvh': false // Disable three-mesh-bvh
-    }
+    // Tambahkan ini untuk menangani package yang bermasalah
+    config.module.rules.push({
+      test: /\.(js|jsx|ts|tsx)$/,
+      exclude: /node_modules/,
+      use: {
+        loader: 'babel-loader',
+        options: {
+          presets: ['next/babel']
+        }
+      }
+    })
 
     return config
   },

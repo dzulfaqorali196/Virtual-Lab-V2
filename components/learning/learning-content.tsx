@@ -1,5 +1,16 @@
 "use client"
 
+import { ErrorBoundary } from 'react-error-boundary'
+
+function ErrorFallback({error}: {error: Error}) {
+  return (
+    <div className="text-red-500">
+      <p>Something went wrong:</p>
+      <pre>{error.message}</pre>
+    </div>
+  )
+}
+
 import { useEffect } from "react"
 import { useSession } from "next-auth/react"
 import {
@@ -300,62 +311,64 @@ export function LearningContent() {
   }
 
   return (
-    <div className="space-y-6">
-      {lessons.map((lesson) => (
-        <Card key={lesson.id} className="p-6">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-semibold">{lesson.title}</h3>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <div className="space-y-6">
+        {lessons.map((lesson) => (
+          <Card key={lesson.id} className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">{lesson.title}</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {Math.round(calculateProgress(lesson.id))}% Complete
+                  </span>
+                  <Progress value={calculateProgress(lesson.id)} className="w-[100px]" />
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  {Math.round(calculateProgress(lesson.id))}% Complete
-                </span>
-                <Progress value={calculateProgress(lesson.id)} className="w-[100px]" />
-              </div>
-            </div>
-            
-            <Accordion type="single" collapsible className="w-full">
-              {lesson.sections.map((section) => {
-                const sectionKey = `${lesson.id}-${section.id}`
-                const isCompleted = completedSections.includes(sectionKey)
-                const quizScore = quizScores[sectionKey]
+              
+              <Accordion type="single" collapsible className="w-full">
+                {lesson.sections.map((section) => {
+                  const sectionKey = `${lesson.id}-${section.id}`
+                  const isCompleted = completedSections.includes(sectionKey)
+                  const quizScore = quizScores[sectionKey]
 
-                return (
-                  <AccordionItem key={section.id} value={section.id}>
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-2">
-                        {isCompleted && (
-                          <CheckCircle2 className="h-4 w-4 text-green-500" />
-                        )}
-                        <span>{section.title}</span>
-                        {isCompleted && quizScore !== undefined && (
-                          <span className="text-sm text-muted-foreground ml-2">
-                            (Score: {quizScore}/{section.quiz.length})
-                          </span>
-                        )}
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="prose prose-sm max-w-none dark:prose-invert">
-                        <div className="whitespace-pre-line mb-6">{section.content}</div>
-                        {!isCompleted && (
-                          <QuizSection
-                            questions={section.quiz}
-                            onComplete={(score) => handleQuizComplete(lesson.id, section.id, score)}
-                          />
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )
-              })}
-            </Accordion>
-          </div>
-        </Card>
-      ))}
-    </div>
+                  return (
+                    <AccordionItem key={section.id} value={section.id}>
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-2">
+                          {isCompleted && (
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          )}
+                          <span>{section.title}</span>
+                          {isCompleted && quizScore !== undefined && (
+                            <span className="text-sm text-muted-foreground ml-2">
+                              (Score: {quizScore}/{section.quiz.length})
+                            </span>
+                          )}
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="prose prose-sm max-w-none dark:prose-invert">
+                          <div className="whitespace-pre-line mb-6">{section.content}</div>
+                          {!isCompleted && (
+                            <QuizSection
+                              questions={section.quiz}
+                              onComplete={(score) => handleQuizComplete(lesson.id, section.id, score)}
+                            />
+                          )}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )
+                })}
+              </Accordion>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </ErrorBoundary>
   )
 }

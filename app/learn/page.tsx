@@ -1,9 +1,14 @@
 import '@/app/globals.css'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LearningContent } from "@/components/learning/learning-content"
 import { VideoTutorials } from "@/components/learning/video-tutorials"
 import { InteractiveQuiz } from "@/components/learning/interactive-quiz"
 import { GraduationCap, PlaySquare, BrainCircuit } from "lucide-react"
+import dynamic from 'next/dynamic'
+
+const LearningContent = dynamic(
+  () => import('@/components/learning/learning-content').then(mod => mod.LearningContent),
+  { ssr: false }
+)
 
 export default function LearnPage() {
   return (
