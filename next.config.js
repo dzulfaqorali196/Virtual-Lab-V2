@@ -37,8 +37,23 @@ const nextConfig = {
       tls: false,
     }
     config.externals = [...(config.externals || []), 'mongoose']
+    
+    // Tambahkan alias untuk three-mesh-bvh
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'three-mesh-bvh': require.resolve('three-mesh-bvh')
+    }
+    
+    // Tambahkan pengecualian untuk three-mesh-bvh
+    config.module.rules.push({
+      test: /three-mesh-bvh/,
+      use: 'null-loader'
+    })
+
     return config
   },
+  // Tambahkan transpilePackages
+  transpilePackages: ['three-mesh-bvh'],
   reactStrictMode: true
 }
 
