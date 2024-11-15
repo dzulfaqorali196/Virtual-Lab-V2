@@ -30,10 +30,6 @@ const routes = [
     label: "Simulation",
   },
   {
-    href: "/learn",
-    label: "Learn",
-  },
-  {
     href: "/analytics",
     label: "Analytics",
   },

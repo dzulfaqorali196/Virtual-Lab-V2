@@ -10,7 +10,6 @@ const nextConfig = {
     serverActions: true,
   },
   webpack: (config, { isServer }) => {
-    // Konfigurasi untuk node:async_hooks
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -22,23 +21,17 @@ const nextConfig = {
       }
     }
     
-    config.module = {
-      ...config.module,
-      exprContextCritical: false,
-      rules: [
-        ...config.module.rules,
-        {
-          test: /node_modules\/mongodb/,
-          use: 'null-loader',
-        }
-      ]
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'three-mesh-bvh': false
     }
 
     return config
   },
   transpilePackages: [
     '@radix-ui/react-progress',
-    '@radix-ui/react-primitive'
+    '@radix-ui/react-primitive',
+    'three'
   ]
 }
 
