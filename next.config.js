@@ -9,30 +9,37 @@ const nextConfig = {
   experimental: {
     serverActions: true,
   },
-  webpack: (config) => {
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
+  webpack: (config, { isServer }) => {
+    // Konfigurasi untuk node:async_hooks
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        async_hooks: false,
+        'node:async_hooks': false
+      }
     }
     
-    // Hapus semua externals
-    config.externals = []
-    
-    // Hapus alias yang tidak perlu
-    config.resolve.alias = {
-      ...config.resolve.alias
+    config.module = {
+      ...config.module,
+      exprContextCritical: false,
+      rules: [
+        ...config.module.rules,
+        {
+          test: /node_modules\/mongodb/,
+          use: 'null-loader',
+        }
+      ]
     }
 
     return config
   },
-  // Sederhanakan transpilePackages
   transpilePackages: [
     '@radix-ui/react-progress',
     '@radix-ui/react-primitive'
-  ],
-  reactStrictMode: true
+  ]
 }
 
 module.exports = nextConfig
