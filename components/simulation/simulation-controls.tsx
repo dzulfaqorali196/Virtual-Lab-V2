@@ -1,15 +1,16 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Button } from "@/components/ui/button"
-import { PlayCircle, PauseCircle, RotateCcw, Save } from "lucide-react"
+import { PlayCircle, PauseCircle, RotateCcw, Save, CheckCircle } from "lucide-react"
 import { usePendulum } from "@/hooks/use-pendulum"
+import { useSession } from "next-auth/react"
 import { useUserPreferences } from "@/hooks/use-user-preferences"
 import { useExperiments } from "@/hooks/use-experiments"
-import { useSession } from "next-auth/react"
+import { toast } from 'sonner'
 
 export function SimulationControls() {
   const { data: session } = useSession()
@@ -25,61 +26,145 @@ export function SimulationControls() {
     resetSimulation,
   } = usePendulum()
 
-  const {
-    defaultLength,
-    defaultMass,
-    defaultAngle,
-    setPreference,
-    loadPreferences,
-  } = useUserPreferences()
-
+  const { preferences, setPreferences, isLoading, loadPreferences } = useUserPreferences()
   const { saveExperiment } = useExperiments()
 
-  // Load user preferences when component mounts
+  const [duration, setDuration] = useState(0)
+  const [isCompleted, setIsCompleted] = useState(false)
+  const [initialAngle, setInitialAngle] = useState(angle)
+  
+  // Timer effect untuk menghitung durasi
   useEffect(() => {
-    if (session?.user) {
-      loadPreferences()
+    let timer: NodeJS.Timeout
+    if (isRunning && !isCompleted) {
+      timer = setInterval(() => {
+        setDuration(prev => prev + 1)
+      }, 1000)
     }
-  }, [session, loadPreferences])
+    return () => clearInterval(timer)
+  }, [isRunning, isCompleted])
 
-  // Apply loaded preferences
+  // Tambahkan fungsi untuk menandai eksperimen selesai
+  const handleComplete = () => {
+    if (isRunning) {
+      toggleSimulation() // Pause simulasi
+    }
+    setIsCompleted(true)
+  }
+
+  // Load preferences saat mount
   useEffect(() => {
-    if (defaultLength) updateLength(defaultLength)
-    if (defaultMass) updateMass(defaultMass)
-    if (defaultAngle) updateAngle(defaultAngle * (Math.PI / 180))
-  }, [defaultLength, defaultMass, defaultAngle, updateLength, updateMass, updateAngle])
+    async function initializeState() {
+      if (session?.user) {
+        try {
+          const prefs = await loadPreferences()
+          if (prefs?.simulationSettings) {
+            updateLength(prefs.simulationSettings.length)
+            updateMass(prefs.simulationSettings.mass)
+            updateAngle(prefs.simulationSettings.angle * (Math.PI / 180))
+            setInitialAngle(prefs.simulationSettings.angle * (Math.PI / 180))
+          }
+        } catch (error) {
+          console.error('Error loading preferences:', error)
+        }
+      }
+    }
+    initializeState()
+  }, [])
 
-  const handleSaveExperiment = async () => {
-    if (!session?.user) return
+  const handleChange = async (value: number, type: 'length' | 'mass' | 'angle') => {
+    // Update local state
+    switch(type) {
+      case 'length':
+        updateLength(value)
+        break
+      case 'mass':
+        updateMass(value)
+        break
+      case 'angle':
+        updateAngle(value * (Math.PI / 180))
+        setInitialAngle(value * (Math.PI / 180))
+        break
+    }
 
-    await saveExperiment({
-      timestamp: Date.now(),
-      length,
-      mass,
-      angle,
-      duration: 0, // You would calculate this based on actual experiment duration
-      measurements: [] // You would include actual measurements here
+    // Update database
+    if (session?.user) {
+      const newSettings = {
+        ...preferences.simulationSettings,
+        [type]: value
+      }
+      
+      await setPreferences({
+        simulationSettings: newSettings
+      })
+    }
+  }
+
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    return `${minutes} menit ${remainingSeconds} detik`
+  }
+
+  const handleReset = async () => {
+    resetSimulation()
+    setDuration(0)
+    setIsCompleted(false)
+    setInitialAngle(angle)
+    await setPreferences({
+      simulationSettings: {
+        length: 1.7,
+        mass: 0.5,
+        angle: 45
+      }
     })
   }
 
-  const handleLengthChange = async (value: number) => {
-    updateLength(value)
-    if (session?.user) {
-      await setPreference("defaultLength", value)
+  const handleSaveExperiment = async () => {
+    if (!session?.user) {
+      toast.error("Please login to save experiments")
+      return
     }
-  }
+    
+    try {
+      if (isRunning) {
+        toast.error("Please complete the simulation before saving")
+        return
+      }
 
-  const handleMassChange = async (value: number) => {
-    updateMass(value)
-    if (session?.user) {
-      await setPreference("defaultMass", value)
-    }
-  }
+      if (!isCompleted) {
+        toast.error("Please complete the experiment before saving")
+        return
+      }
 
-  const handleAngleChange = async (value: number) => {
-    updateAngle(value * (Math.PI / 180))
-    if (session?.user) {
-      await setPreference("defaultAngle", value)
+      if (!length || !mass || !initialAngle) {
+        toast.error("Invalid experiment parameters")
+        return
+      }
+
+      const experimentData = {
+        userId: session.user.email as string,
+        title: `Experiment ${new Date().toLocaleString()}`,
+        description: `Length: ${length}m, Mass: ${mass}kg, Initial Angle: ${initialAngle * (180 / Math.PI)}°`,
+        timestamp: new Date(),
+        parameters: {
+          length,
+          mass, 
+          angle: initialAngle * (180 / Math.PI)
+        },
+        duration: duration,
+        measurements: []
+      }
+      
+      await saveExperiment(experimentData)
+      toast.success('Experiment saved successfully!')
+      // Reset states setelah save
+      setDuration(0)
+      setIsCompleted(false)
+
+    } catch (error) {
+      console.error('Error saving experiment:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to save experiment')
     }
   }
 
@@ -91,72 +176,92 @@ export function SimulationControls() {
             <Label>String Length (m)</Label>
             <Slider
               value={[length]}
-              onValueChange={([value]) => handleLengthChange(value)}
+              onValueChange={([value]) => handleChange(value, 'length')}
               min={0.1}
               max={2}
               step={0.1}
+              disabled={isLoading || isRunning}
             />
-            <p className="text-sm text-muted-foreground">{length.toFixed(1)} m</p>
+            <p className="text-sm text-muted-foreground">{length.toFixed(2)} m</p>
           </div>
 
           <div className="space-y-2">
             <Label>Mass (kg)</Label>
             <Slider
               value={[mass]}
-              onValueChange={([value]) => handleMassChange(value)}
+              onValueChange={([value]) => handleChange(value, 'mass')}
               min={0.1}
               max={2}
               step={0.1}
+              disabled={isLoading || isRunning}
             />
-            <p className="text-sm text-muted-foreground">{mass.toFixed(1)} kg</p>
+            <p className="text-sm text-muted-foreground">{mass.toFixed(2)} kg</p>
           </div>
 
           <div className="space-y-2">
             <Label>Initial Angle (degrees)</Label>
             <Slider
               value={[angle * (180 / Math.PI)]}
-              onValueChange={([value]) => handleAngleChange(value)}
+              onValueChange={([value]) => handleChange(value, 'angle')}
               min={-90}
               max={90}
               step={1}
+              disabled={isLoading || isRunning}
             />
-            <p className="text-sm text-muted-foreground">{(angle * (180 / Math.PI)).toFixed(1)}°</p>
+            <p className="text-sm text-muted-foreground">
+              Initial: {(initialAngle * (180 / Math.PI)).toFixed(1)}° | Current: {(angle * (180 / Math.PI)).toFixed(1)}°
+            </p>
           </div>
         </div>
-
-        <div className="flex space-x-4">
+        <div className="text-sm text-muted-foreground">
+          Duration: {formatDuration(duration)}
+        </div>
+        <div className="flex justify-between space-x-2">
           <Button
             onClick={toggleSimulation}
-            className="flex-1"
+            disabled={isLoading || isCompleted}
           >
             {isRunning ? (
               <>
-                <PauseCircle className="mr-2 h-4 w-4" />
+                <PauseCircle className="w-4 h-4 mr-2" />
                 Pause
               </>
             ) : (
               <>
-                <PlayCircle className="mr-2 h-4 w-4" />
+                <PlayCircle className="w-4 h-4 mr-2" />
                 Start
               </>
             )}
           </Button>
-          <Button
-            variant="outline"
-            onClick={resetSimulation}
-          >
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Reset
-          </Button>
-          {session?.user && (
+
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              onClick={handleComplete}
+              disabled={isLoading || !session?.user || isCompleted}
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Complete
+            </Button>
+
             <Button
               variant="outline"
               onClick={handleSaveExperiment}
+              disabled={isLoading || !session?.user || !isCompleted}
             >
-              <Save className="mr-2 h-4 w-4" />
+              <Save className="w-4 h-4 mr-2" />
               Save
             </Button>
-          )}
+            
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              disabled={isLoading}
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reset
+            </Button>
+          </div>
         </div>
       </div>
     </Card>

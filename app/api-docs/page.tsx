@@ -1,5 +1,6 @@
 'use client';
 
+import '@/app/globals.css'
 import dynamic from 'next/dynamic';
 import 'swagger-ui-react/swagger-ui.css';
 import { swaggerSpec } from './swagger';

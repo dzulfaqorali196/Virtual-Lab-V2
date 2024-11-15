@@ -1,63 +1,58 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema, model, Document } from 'mongoose';
 
-const ModuleSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  slug: { type: String, required: true, unique: true },
+export interface ExperimentDocument extends Document {
+  userId: string;
+  title: string;
+  description?: string;
+  timestamp: Date;
+  parameters: {
+    length: number;
+    mass: number;
+    angle: number;
+  };
+  duration: number;
+  measurements: Array<{
+    time: number;
+    angle: number;
+    energy: number;
+  }>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const ExperimentSchema = new Schema({
+  userId: {
+    type: String,
+    required: true,
+    index: true
+  },
+  title: {
+    type: String,
+    required: true
+  },
   description: String,
-  order: { type: Number, required: true },
-  type: { 
-    type: String, 
-    enum: ['theory', 'simulation', 'quiz'], 
-    required: true 
+  timestamp: {
+    type: Date,
+    default: Date.now
   },
-  status: { 
-    type: String, 
-    enum: ['draft', 'published', 'archived'], 
-    default: 'draft' 
+  parameters: {
+    length: { type: Number, required: true },
+    mass: { type: Number, required: true },
+    angle: { type: Number, required: true }
   },
-  content: {
-    sections: [{
-      id: String,
-      title: String,
-      content: String,
-      order: Number,
-      type: {
-        type: String,
-        enum: ['text', 'video', 'interactive', 'quiz']
-      },
-      quiz: [{
-        question: String,
-        options: [String],
-        correctAnswer: Number,
-        explanation: String
-      }]
-    }],
-    resources: [{
-      title: String,
-      type: String,
-      url: String
-    }]
+  duration: {
+    type: Number,
+    default: 0
   },
-  metadata: {
-    duration: Number, // in minutes
-    difficulty: { 
-      type: String, 
-      enum: ['beginner', 'intermediate', 'advanced'] 
-    },
-    prerequisites: [{ 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: 'Module' 
-    }],
-    tags: [String]
-  }
+  measurements: [{
+    time: Number,
+    angle: Number,
+    energy: Number
+  }]
 }, {
   timestamps: true
 });
 
-// Indexes
-ModuleSchema.index({ slug: 1 }, { unique: true });
-ModuleSchema.index({ status: 1 });
-ModuleSchema.index({ 'metadata.tags': 1 });
-ModuleSchema.index({ order: 1 });
+const Experiment = mongoose.models.Experiment || model<ExperimentDocument>('Experiment', ExperimentSchema);
 
-export default mongoose.models.Module || mongoose.model('Module', ModuleSchema);
+export default Experiment; 

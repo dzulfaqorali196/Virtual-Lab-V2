@@ -47,7 +47,7 @@ function PendulumModel() {
 
         {/* Bob */}
         <mesh 
-          ref={bobRef}
+          ref={bobRef as any}
           position={[0, -length, 0]}
         >
           <sphereGeometry args={[mass * 0.2]} />
@@ -64,7 +64,6 @@ function PendulumModel() {
         args={[10, 10]} 
         position={[0, 0, 0]}
         rotation={[0, 0, 0]}
-        color={gridColor}
       />
     </>
   )

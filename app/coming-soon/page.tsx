@@ -1,5 +1,6 @@
 "use client"
 
+import '@/app/globals.css'
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Construction } from "lucide-react"

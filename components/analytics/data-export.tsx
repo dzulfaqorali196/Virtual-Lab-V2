@@ -1,8 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Download, FileSpreadsheet, FileJson } from "lucide-react"
+import { FileSpreadsheet, FileJson } from "lucide-react"
+import { useExperiments } from "@/hooks/use-experiments"
 import {
   Select,
   SelectContent,
@@ -12,6 +14,19 @@ import {
 } from "@/components/ui/select"
 
 export function DataExport() {
+  const { experiments, exportData } = useExperiments()
+  const [timeRange, setTimeRange] = useState("all")
+  const [dataPoints, setDataPoints] = useState("all")
+  const [format, setFormat] = useState<"csv" | "json">("csv")
+
+  const handleExport = async () => {
+    await exportData({
+      timeRange,
+      dataPoints,
+      format
+    })
+  }
+
   return (
     <Card className="p-6">
       <div className="space-y-6">
@@ -22,55 +37,59 @@ export function DataExport() {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Time Range</h3>
-              <Select defaultValue="all">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select time range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Time</SelectItem>
-                  <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="week">This Week</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Time Range</h3>
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select time range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="week">This Week</SelectItem>
+                <SelectItem value="month">This Month</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Data Points</h3>
-              <Select defaultValue="all">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select data points" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Data</SelectItem>
-                  <SelectItem value="summary">Summary Only</SelectItem>
-                  <SelectItem value="custom">Custom Selection</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Data Points</h3>
+            <Select value={dataPoints} onValueChange={setDataPoints}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select data points" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Data</SelectItem>
+                <SelectItem value="summary">Summary Only</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Export Format</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" className="w-full">
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  CSV
-                </Button>
-                <Button variant="outline" className="w-full">
-                  <FileJson className="mr-2 h-4 w-4" />
-                  JSON
-                </Button>
-              </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant={format === "csv" ? "default" : "outline"}
+                onClick={() => setFormat("csv")}
+                className="w-full"
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                CSV
+              </Button>
+              <Button
+                variant={format === "json" ? "default" : "outline"}
+                onClick={() => setFormat("json")}
+                className="w-full"
+              >
+                <FileJson className="mr-2 h-4 w-4" />
+                JSON
+              </Button>
             </div>
-
-            <Button className="w-full">
-              <Download className="mr-2 h-4 w-4" />
+            <Button 
+              onClick={handleExport}
+              className="w-full"
+              disabled={!experiments.length}
+            >
               Export Data
             </Button>
           </div>

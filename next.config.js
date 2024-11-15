@@ -6,6 +6,9 @@ const nextConfig = {
   images: { 
     domains: ['images.unsplash.com'],
   },
+  experimental: {
+    serverActions: true,
+  },
   // Menambahkan konfigurasi untuk API docs
   async redirects() {
     return [
@@ -14,6 +17,15 @@ const nextConfig = {
         destination: '/api-docs',
         permanent: true,
       },
+    ]
+  },
+  // Menambahkan rewrite untuk API routes
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: '/api/:path*'  // Tidak perlu menambahkan /route
+      }
     ]
   },
   // Konfigurasi untuk swagger-ui-react

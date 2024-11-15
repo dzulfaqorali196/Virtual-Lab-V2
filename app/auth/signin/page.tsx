@@ -1,5 +1,6 @@
 "use client"
 
+import '@/app/globals.css'
 import { signIn } from "next-auth/react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"

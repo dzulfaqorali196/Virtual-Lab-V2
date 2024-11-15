@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect, useState } from "react"
+import { useExperiments } from "@/hooks/use-experiments"
 import {
   Table,
   TableBody,
@@ -9,47 +11,129 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Download, Trash2 } from "lucide-react"
+import { formatDate, formatDuration } from "@/lib/utils"
+import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
-const experimentHistory = [
-  {
-    id: 1,
-    date: "2024-03-20",
-    length: 1.0,
-    mass: 0.5,
-    initialAngle: 45,
-    duration: "00:02:30",
-    status: "Completed",
-  },
-  {
-    id: 2,
-    date: "2024-03-19",
-    length: 1.5,
-    mass: 1.0,
-    initialAngle: 30,
-    duration: "00:01:45",
-    status: "Completed",
-  },
-  {
-    id: 3,
-    date: "2024-03-18",
-    length: 0.8,
-    mass: 0.3,
-    initialAngle: 60,
-    duration: "00:03:15",
-    status: "Completed",
-  },
-]
+// Match the schema from use-experiments.ts
+interface ExperimentParameters {
+  length: number
+  mass: number
+  angle: number
+}
+
+interface Experiment {
+  _id?: string | any;
+  id?: string;
+  timestamp: Date | number;
+  parameters: ExperimentParameters;
+  duration: number;
+}
+
+interface ExperimentHistoryRowProps {
+  experiment: Experiment
+}
+
+function ExperimentHistoryRow({ experiment }: ExperimentHistoryRowProps) {
+  const { deleteExperiment } = useExperiments()
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleDelete = async () => {
+    if (isDeleting) return // Prevent double click
+    
+    try {
+      setIsDeleting(true)
+      await deleteExperiment(experiment.id || experiment._id?.toString())
+      toast.success('Experiment deleted successfully')
+    } catch (error) {
+      console.error('Delete error:', error)
+      toast.error('Failed to delete experiment')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  return (
+    <TableRow>
+      <TableCell>
+        {new Date(experiment.timestamp).toLocaleDateString()}
+      </TableCell>
+      <TableCell>
+        {experiment.parameters?.length || '-'}
+      </TableCell>
+      <TableCell>
+        {experiment.parameters?.mass || '-'}
+      </TableCell>
+      <TableCell>
+        {experiment.parameters?.angle?.toFixed(1) || '-'}°
+      </TableCell>
+      <TableCell>{formatDuration(experiment.duration)}</TableCell>
+      <TableCell>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleDelete}
+          disabled={isDeleting}
+        >
+          <Trash2 className={cn(
+            "h-4 w-4",
+            isDeleting ? "animate-spin text-muted-foreground" : "text-destructive"
+          )} />
+        </Button>
+      </TableCell>
+    </TableRow>
+  )
+}
 
 export function ExperimentHistory() {
+  const { experiments, isLoading, loadExperiments, exportData } = useExperiments()
+
+  useEffect(() => {
+    loadExperiments()
+  }, [loadExperiments])
+
+  if (isLoading) {
+    return (
+      <Card className="p-6">
+        <div className="flex items-center justify-center py-8">
+          <p className="text-sm text-muted-foreground">Loading experiments...</p>
+        </div>
+      </Card>
+    )
+  }
+
+  if (!experiments.length) {
+    return (
+      <Card className="p-6">
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight">Experiment History</h2>
+              <p className="text-sm text-muted-foreground">
+                Record of your previous experiments
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center justify-center py-8">
+            <p className="text-sm text-muted-foreground">No experiments recorded yet.</p>
+          </div>
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <Card className="p-6">
       <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Experiment History</h2>
-          <p className="text-sm text-muted-foreground">
-            Record of your previous experiments
-          </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">Experiment History</h2>
+            <p className="text-sm text-muted-foreground">
+              Record of your previous experiments
+            </p>
+          </div>
         </div>
 
         <div className="rounded-md border">
@@ -61,21 +145,15 @@ export function ExperimentHistory() {
                 <TableHead>Mass (kg)</TableHead>
                 <TableHead>Initial Angle (°)</TableHead>
                 <TableHead>Duration</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {experimentHistory.map((experiment) => (
-                <TableRow key={experiment.id}>
-                  <TableCell>{experiment.date}</TableCell>
-                  <TableCell>{experiment.length}</TableCell>
-                  <TableCell>{experiment.mass}</TableCell>
-                  <TableCell>{experiment.initialAngle}</TableCell>
-                  <TableCell>{experiment.duration}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{experiment.status}</Badge>
-                  </TableCell>
-                </TableRow>
+              {experiments.map((experiment) => (
+                <ExperimentHistoryRow 
+                  key={experiment.id || experiment._id?.toString()}
+                  experiment={experiment}
+                />
               ))}
             </TableBody>
           </Table>

@@ -1,5 +1,6 @@
 "use client"
 
+import '@/app/globals.css'
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { 
@@ -25,6 +26,7 @@ import { ParticleField } from "@/components/background/particle-field"
 import { RippleEffect } from "@/components/background/ripple-effect"
 import { TopicCard } from "@/components/cards/topic-card"
 import { FeatureCard } from "@/components/cards/feature-card"
+import Navbar from "@/components/navbar"
 
 const topics = [
   {
