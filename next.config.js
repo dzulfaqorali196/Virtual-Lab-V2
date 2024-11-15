@@ -36,25 +36,25 @@ const nextConfig = {
       net: false,
       tls: false,
     }
-    config.externals = [...(config.externals || []), 'mongoose']
     
-    // Tambahkan alias untuk three-mesh-bvh
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'three-mesh-bvh': require.resolve('three-mesh-bvh'),
-      'input-otp': require.resolve('input-otp')
-    }
+    // Hapus mongoose dari externals
+    config.externals = config.externals.filter(external => external !== 'mongoose')
     
-    // Tambahkan rule untuk input-otp
+    // Tambahkan transpilasi untuk semua packages yang bermasalah
     config.module.rules.push({
-      test: /input-otp/,
+      test: /node_modules\/@radix-ui\/react-progress|input-otp/,
       use: 'null-loader'
     })
 
     return config
   },
-  // Tambahkan transpilePackages
-  transpilePackages: ['three-mesh-bvh', 'input-otp'],
+  // Tambahkan semua packages yang perlu ditranspile
+  transpilePackages: [
+    'three-mesh-bvh',
+    'input-otp',
+    '@radix-ui/react-progress',
+    '@radix-ui/react-primitive'
+  ],
   reactStrictMode: true
 }
 
