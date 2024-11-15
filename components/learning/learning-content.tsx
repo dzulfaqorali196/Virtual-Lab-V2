@@ -43,12 +43,7 @@ const lessons: Lesson[] = [
       {
         id: "basics",
         title: "What is a Pendulum?",
-        content: `A pendulum is a weight suspended from a fixed point so that it can swing freely back and forth under the influence of gravity. The simple pendulum, which we study in this simulation, consists of a mass (called a bob) attached to a weightless, unstretchable string.
-
-Key components:
-• Bob: The mass at the end of the pendulum
-• String: The connection between the bob and pivot point
-• Pivot: The fixed point from which the pendulum hangs`,
+        content: "A pendulum is a weight suspended from a fixed point so that it can swing freely back and forth under the influence of gravity. The simple pendulum, which we study in this simulation, consists of a mass (called a bob) attached to a weightless, unstretchable string.\n\nKey components:\n• Bob: The mass at the end of the pendulum\n• String: The connection between the bob and pivot point\n• Pivot: The fixed point from which the pendulum hangs",
         quiz: [
           {
             id: "q1",
@@ -79,14 +74,7 @@ Key components:
       {
         id: "motion",
         title: "Understanding Pendulum Motion",
-        content: `The motion of a pendulum is characterized by several key terms:
-
-• Amplitude: The maximum angle of displacement from the equilibrium position
-• Period: The time taken for one complete oscillation
-• Frequency: The number of oscillations per second
-• Equilibrium: The rest position when the pendulum is vertical
-
-The motion is governed by gravity and follows simple harmonic motion for small angles.`,
+        content: "The motion of a pendulum is characterized by several key terms:\n\n• Amplitude: The maximum angle of displacement from the equilibrium position\n• Period: The time taken for one complete oscillation\n• Frequency: The number of oscillations per second\n• Equilibrium: The rest position when the pendulum is vertical\n\nThe motion is governed by gravity and follows simple harmonic motion for small angles.",
         quiz: [
           {
             id: "q3",
@@ -123,16 +111,7 @@ The motion is governed by gravity and follows simple harmonic motion for small a
       {
         id: "energy-types",
         title: "Types of Energy",
-        content: `In a pendulum system, energy continuously transforms between two main types:
-
-• Potential Energy (PE): Energy due to position, maximum at the highest points
-• Kinetic Energy (KE): Energy of motion, maximum at the lowest point
-
-The total mechanical energy (PE + KE) remains constant in an ideal system without friction.
-
-Energy Equations:
-• PE = mgh (where h is height from lowest point)
-• KE = ½mv² (where v is instantaneous velocity)`,
+        content: "In a pendulum system, energy continuously transforms between two main types:\n\n• Potential Energy (PE): Energy due to position, maximum at the highest points\n• Kinetic Energy (KE): Energy of motion, maximum at the lowest point\n\nThe total mechanical energy (PE + KE) remains constant in an ideal system without friction.\n\nEnergy Equations:\n• PE = mgh (where h is height from lowest point)\n• KE = ½mv² (where v is instantaneous velocity)",
         quiz: [
           {
             id: "e1",
@@ -163,16 +142,7 @@ Energy Equations:
       {
         id: "conservation",
         title: "Energy Conservation and Transfer",
-        content: `Energy conservation is a fundamental principle in pendulum motion:
-
-• At the highest point: Maximum PE, Zero KE
-• At the lowest point: Maximum KE, Zero PE
-• During swing: Continuous transfer between PE and KE
-
-Factors affecting energy:
-• Friction reduces total energy over time
-• Air resistance causes damping
-• Initial displacement determines total energy`,
+        content: "Energy conservation is a fundamental principle in pendulum motion:\n\n• At the highest point: Maximum PE, Zero KE\n• At the lowest point: Maximum KE, Zero PE\n• During swing: Continuous transfer between PE and KE\n\nFactors affecting energy:\n• Friction reduces total energy over time\n• Air resistance causes damping\n• Initial displacement determines total energy",
         quiz: [
           {
             id: "e3",
