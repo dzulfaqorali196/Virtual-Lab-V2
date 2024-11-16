@@ -8,20 +8,28 @@ import { updateUserStatus } from "@/lib/db"
 
 // Helper untuk mendapatkan GitHub credentials berdasarkan environment
 const getGitHubCredentials = () => {
+  // Untuk localhost
+  if (process.env.NEXTAUTH_URL?.includes('localhost')) {
+    return {
+      clientId: process.env.GITHUB_CLIENT_ID!,        // untuk localhost:3000
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!
+    }
+  }
+  // Untuk environment Vercel
   if (process.env.NODE_ENV === 'development') {
     return {
-      clientId: process.env.GITHUB_SECRET_DEV!,
-      clientSecret: process.env.GITHUB_SECRET_DEV!
+      clientId: process.env.GITHUB_SECRET_DEV!,       // untuk development
+      clientSecret: process.env.GITHUB_SECRET_DEV_SECRET!
     }
   } else if (process.env.VERCEL_ENV === 'preview') {
     return {
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!
+      clientId: process.env.GITHUB_SECRET_PREVIEW!,   // untuk preview
+      clientSecret: process.env.GITHUB_SECRET_PREVIEW_SECRET!
     }
   } else {
     return {
-      clientId: process.env.GITHUB_SECRET_PROD!,
-      clientSecret: process.env.GITHUB_SECRET_PROD!
+      clientId: process.env.GITHUB_SECRET_PROD!,      // untuk production
+      clientSecret: process.env.GITHUB_SECRET_PROD_SECRET!
     }
   }
 }
