@@ -212,14 +212,16 @@ export function SimulationControls() {
               Initial: {(initialAngle * (180 / Math.PI)).toFixed(1)}° | Current: {(angle * (180 / Math.PI)).toFixed(1)}°
             </p>
           </div>
+
         </div>
         <div className="text-sm text-muted-foreground">
           Duration: {formatDuration(duration)}
         </div>
-        <div className="flex justify-between space-x-2">
+        <div className="flex flex-col xs:flex-row justify-between gap-3 xs:gap-2">
           <Button
             onClick={toggleSimulation}
             disabled={isLoading || isCompleted}
+            className="w-full xs:w-auto"
           >
             {isRunning ? (
               <>
@@ -234,11 +236,12 @@ export function SimulationControls() {
             )}
           </Button>
 
-          <div className="space-x-2">
+          <div className="grid grid-cols-3 xs:flex gap-2">
             <Button
               variant="outline"
               onClick={handleComplete}
               disabled={isLoading || !session?.user || isCompleted}
+              className="w-full xs:w-auto"
             >
               <CheckCircle className="w-4 h-4 mr-2" />
               Complete
@@ -248,6 +251,7 @@ export function SimulationControls() {
               variant="outline"
               onClick={handleSaveExperiment}
               disabled={isLoading || !session?.user || !isCompleted}
+              className="w-full xs:w-auto"
             >
               <Save className="w-4 h-4 mr-2" />
               Save
@@ -257,6 +261,7 @@ export function SimulationControls() {
               variant="outline"
               onClick={handleReset}
               disabled={isLoading}
+              className="w-full xs:w-auto"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
               Reset

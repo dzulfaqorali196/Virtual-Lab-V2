@@ -71,7 +71,7 @@ export default function Navbar() {
           <span className="font-bold hidden sm:inline-block">Virtual Physics Lab</span>
         </Link>
 
-        <div className="hidden md:flex md:items-center md:space-x-6">
+        <div className="hidden lg:flex lg:items-center lg:space-x-6">
           {routes.map((route) => (
             <Link
               key={route.href}
@@ -147,7 +147,7 @@ export default function Navbar() {
             </div>
           )}
 
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <MobileMenu routes={routes} session={session} />
           </div>
         </div>

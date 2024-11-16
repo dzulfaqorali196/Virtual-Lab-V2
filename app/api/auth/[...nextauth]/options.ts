@@ -4,6 +4,7 @@ import GithubProvider from "next-auth/providers/github"
 import { connectDB } from "@/lib/mongodb"
 import User from "@/models/User"
 import { OAuthAccount, UserAccount, CreateUserData } from "@/types/auth"
+import { updateUserStatus } from "@/lib/db"
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -34,6 +35,7 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             email: user.email,
             image: user.image,
+            status: 'active',
             accounts: [{
               provider: account.provider,
               providerAccountId: account.providerAccountId,
@@ -58,6 +60,8 @@ export const authOptions: NextAuthOptions = {
             }
           });
         } else {
+          await updateUserStatus(user.email, 'active');
+          
           const accountExists = dbUser.accounts?.some((acc: { provider: string; providerAccountId: string }) => 
             acc.provider === account.provider && 
             acc.providerAccountId === account.providerAccountId
@@ -131,11 +135,14 @@ export const authOptions: NextAuthOptions = {
   events: {
     async signOut({ token }) {
       try {
-        if (token?.id) {
+        if (token?.email) {
           await connectDB();
-          await User.findByIdAndUpdate(token.id, {
-            lastLogin: new Date()
-          });
+          await updateUserStatus(token.email, 'inactive');
+          
+          await User.findOneAndUpdate(
+            { email: token.email },
+            { lastLogin: new Date() }
+          );
         }
       } catch (error) {
         console.error('SignOut event error:', error);

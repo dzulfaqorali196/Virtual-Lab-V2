@@ -110,18 +110,18 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center w-full">
       {/* Hero Section with Interactive Background */}
-      <section className="w-full min-h-[100svh] py-8 xs:py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-b from-background to-muted relative overflow-hidden">
+      <section className="w-full min-h-[calc(100vh-4rem)] py-6 sm:py-12 md:py-20 bg-gradient-to-b from-background to-muted relative overflow-hidden">
         {/* Background Elements */}
         <ParticleField />
         <FloatingFormulas />
         <RippleEffect />
 
-        <div className="container relative flex flex-col items-center text-center space-y-4 xs:space-y-6 sm:space-y-8 px-0 xs:px-4 sm:px-6 lg:px-8">
+        <div className="container relative flex flex-col items-center text-center space-y-4 sm:space-y-6 px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="space-y-3 xs:space-y-4 sm:space-y-6 max-w-3xl mx-auto w-full"
+            className="space-y-3 sm:space-y-4 max-w-3xl mx-auto w-full"
           >
             <div className="inline-flex items-center px-2 xs:px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border bg-background/50 backdrop-blur-sm">
               <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 xs:mr-1.5 sm:mr-2 text-primary" />

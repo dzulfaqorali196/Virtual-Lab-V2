@@ -17,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <div className="min-h-screen bg-background flex flex-col">
               <Navbar />
-              <main className="flex-1 container mx-auto px-4 py-6">
+              <main className="flex-1 container mx-auto px-2 xs:px-3 sm:px-4 py-4 sm:py-6">
                 {children}
               </main>
               <Toaster />

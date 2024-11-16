@@ -11,21 +11,21 @@ function PendulumModel() {
   const { theme } = useTheme()
   const bobRef = useRef()
 
-  const materialColor = theme === "dark" ? "#ffffff" : "#000000"
+  const materialColor = theme === "system" || theme === "dark" ? "#ffffff" : "#000000"
   const gridColor = theme === "dark" ? "#666666" : "#999999"
 
   return (
     <>
       {/* Lights */}
-      <ambientLight intensity={theme === "dark" ? 0.2 : 0.4} />
+      <ambientLight intensity={theme === "dark" || theme === "system" ? 0.2 : 0.4} />
       <directionalLight
         position={[5, 5, 5]}
-        intensity={theme === "dark" ? 0.5 : 1}
+        intensity={theme === "dark" || theme === "system" ? 0.5 : 1}
         castShadow
       />
       <spotLight
         position={[0, 5, 0]}
-        intensity={theme === "dark" ? 0.3 : 0.7}
+        intensity={theme === "dark" || theme === "system" ? 0.3 : 0.7}
         angle={0.5}
         penumbra={1}
         castShadow

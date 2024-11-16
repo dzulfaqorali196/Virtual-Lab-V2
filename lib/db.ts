@@ -316,3 +316,24 @@ mongoose.connection.on('connected', () => {
 export function isDatabaseHealthy(): boolean {
   return isHealthy && mongoose.connection.readyState === 1
 }
+
+export async function updateUserStatus(userId: string, status: 'active' | 'inactive') {
+  return withRetry(async () => {
+    try {
+      const user = await User.findOneAndUpdate(
+        { email: userId },
+        { $set: { status } },
+        { new: true }
+      )
+      
+      if (!user) {
+        throw new Error('User not found')
+      }
+
+      return user
+    } catch (error) {
+      console.error('Error updating user status:', error)
+      throw error
+    }
+  })
+}
