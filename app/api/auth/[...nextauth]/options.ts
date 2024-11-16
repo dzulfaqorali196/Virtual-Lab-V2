@@ -6,6 +6,26 @@ import User from "@/models/User"
 import { OAuthAccount, UserAccount, CreateUserData } from "@/types/auth"
 import { updateUserStatus } from "@/lib/db"
 
+// Helper untuk mendapatkan GitHub credentials berdasarkan environment
+const getGitHubCredentials = () => {
+  if (process.env.NODE_ENV === 'development') {
+    return {
+      clientId: process.env.GITHUB_SECRET_DEV!,
+      clientSecret: process.env.GITHUB_SECRET_DEV!
+    }
+  } else if (process.env.VERCEL_ENV === 'preview') {
+    return {
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!
+    }
+  } else {
+    return {
+      clientId: process.env.GITHUB_SECRET_PROD!,
+      clientSecret: process.env.GITHUB_SECRET_PROD!
+    }
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -17,10 +37,7 @@ export const authOptions: NextAuthOptions = {
         }
       }
     }),
-    GithubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    })
+    GithubProvider(getGitHubCredentials())
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
