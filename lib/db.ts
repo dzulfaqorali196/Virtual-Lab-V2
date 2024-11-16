@@ -84,46 +84,52 @@ export async function getUserProfile(userId: string) {
   }
 }
 
+interface UserStats {
+  experimentsCompleted: number;
+  totalTimeSpent: number;
+  avgDuration: number;
+  avgAngle: number;
+  lastActive: Date;
+}
+
 export async function updateUserTotalTime(userId: string, additionalTime: number) {
-  return withRetry(async () => {
+  let retries = 3;
+  
+  while (retries > 0) {
     try {
-      return await withTransaction(async (session) => {
-        const user = await User.findOneAndUpdate(
-          { 
-            email: userId,
-            'profile.stats.lastActive': { $lt: new Date() }
-          },
-          { 
-            $inc: { 'profile.stats.totalExperimentTime': additionalTime },
-            $set: { 'profile.stats.lastActive': new Date() }
-          },
-          { 
-            new: true,
-            select: 'profile.stats',
-            session,
-            runValidators: true
-          }
-        ).lean() as UserWithProfile | null;
-
-        if (!user) {
-          const existingUser = await User.findOne({ email: userId }).select('_id').lean()
-          if (!existingUser) {
-            throw new Error('User not found')
-          }
-          throw new Error('Update conflict')
+      const user = await User.findOneAndUpdate(
+        { email: userId },
+        { 
+          $inc: { 'profile.stats.totalTimeSpent': additionalTime },
+          $set: { 'profile.stats.lastActive': new Date() }
+        },
+        { 
+          new: true,
+          lean: true 
         }
+      ) as UserWithProfile | null;  // Tambahkan type assertion
 
-        return user.profile?.stats || {
-          experimentsCompleted: 0,
-          totalExperimentTime: additionalTime,
-          lastActive: new Date()
-        }
-      })
+      if (!user) {
+        throw new Error('User not found')
+      }
+
+      // Return default stats jika tidak ada
+      return user.profile?.stats || {
+        experimentsCompleted: 0,
+        totalTimeSpent: additionalTime,
+        avgDuration: 0,
+        avgAngle: 0,
+        lastActive: new Date()
+      };
     } catch (error) {
-      console.error('Error updating total time:', error)
-      throw error
+      retries--;
+      if (retries === 0) {
+        console.error('Error updating total time:', error)
+        throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
-  })
+  }
 }
 
 export async function updateUserProfile(userId: string, data: ProfileUpdateData) {
@@ -198,16 +204,7 @@ export async function getUserExperiments(userId: string) {
   }
 }
 
-// Tambahkan interface untuk stats
-interface ExperimentStats {
-  experimentsCompleted: number;
-  totalExperimentTime: number;
-  avgDuration: number;
-  avgAngle: number;
-  lastActive: Date;
-}
-
-export async function getExperimentStats(userId: string): Promise<ExperimentStats> {
+export async function getExperimentStats(userId: string): Promise<UserStats> {
   try {
     const stats = await Experiment.aggregate([
       { $match: { userId } },
@@ -215,7 +212,7 @@ export async function getExperimentStats(userId: string): Promise<ExperimentStat
         $group: {
           _id: null,
           experimentsCompleted: { $sum: 1 },
-          totalExperimentTime: { $sum: '$duration' },
+          totalTimeSpent: { $sum: '$duration' },
           avgDuration: { $avg: '$duration' },
           avgAngle: { $avg: '$parameters.angle' }
         }
@@ -223,9 +220,9 @@ export async function getExperimentStats(userId: string): Promise<ExperimentStat
     ]);
 
     // Default stats jika belum ada experiment
-    const defaultStats: ExperimentStats = {
+    const defaultStats: UserStats = {
       experimentsCompleted: 0,
-      totalExperimentTime: 0,
+      totalTimeSpent: 0,
       avgDuration: 0,
       avgAngle: 0,
       lastActive: new Date()
@@ -233,7 +230,7 @@ export async function getExperimentStats(userId: string): Promise<ExperimentStat
 
     return stats[0] ? {
       experimentsCompleted: stats[0].experimentsCompleted,
-      totalExperimentTime: stats[0].totalExperimentTime,
+      totalTimeSpent: stats[0].totalTimeSpent,
       avgDuration: stats[0].avgDuration,
       avgAngle: stats[0].avgAngle,
       lastActive: new Date()

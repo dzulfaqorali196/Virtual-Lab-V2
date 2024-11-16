@@ -176,6 +176,10 @@ const UserSchema = new mongoose.Schema({
       type: Number,
       default: 0
     },
+    totalTimeSpent: {
+      type: Number,
+      default: 0
+    },
     avgDuration: {
       type: Number,
       default: 0

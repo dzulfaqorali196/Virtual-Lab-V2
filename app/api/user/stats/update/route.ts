@@ -26,10 +26,10 @@ export async function POST(req: Request) {
     
     return NextResponse.json({ stats })
   } catch (error) {
-    console.error('Time tracker error:', error)
+    console.error('Stats update error:', error)
     return NextResponse.json(
-      { error: 'Failed to update time', shouldRetry: true },
+      { error: 'Failed to update stats' },
       { status: 500 }
     )
   }
-} 
+}
