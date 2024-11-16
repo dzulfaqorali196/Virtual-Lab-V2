@@ -27,6 +27,9 @@ interface UserProfile {
   stats?: {
     experimentsCompleted: number
     totalExperimentTime: number
+    totalTimeSpent: number
+    avgDuration: number
+    avgAngle: number
     lastActive: Date
   }
 }
@@ -94,6 +97,9 @@ export async function GET() {
         stats: user.profile?.stats || {
           experimentsCompleted: 0,
           totalExperimentTime: 0,
+          totalTimeSpent: 0,
+          avgDuration: 0,
+          avgAngle: 0,
           lastActive: new Date()
         }
       }
@@ -168,6 +174,9 @@ export async function PUT(req: Request) {
         stats: user.profile?.stats || {
           experimentsCompleted: 0,
           totalExperimentTime: 0,
+          totalTimeSpent: 0,
+          avgDuration: 0,
+          avgAngle: 0,
           lastActive: new Date()
         }
       }

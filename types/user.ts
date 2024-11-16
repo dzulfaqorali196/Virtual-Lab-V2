@@ -39,8 +39,10 @@ export interface UserAchievement {
 
 export interface UserStats {
   experimentsCompleted: number
-  totalExperimentTime: number
-  lastActive: string | number | Date
+  totalTimeSpent: number
+  avgDuration: number
+  avgAngle: number
+  lastActive: Date
 }
 
 export interface UserSocial {
