@@ -26,8 +26,8 @@ export function PendulumCanvas2D() {
     ctx.translate(canvas.width / 2, 50)
 
     // Set color based on theme
-    const strokeColor = theme === "dark" ? "rgba(255, 255, 255, 0.9)" : "rgba(0, 0, 0, 0.9)"
-    const fillColor = theme === "dark" ? "rgba(255, 255, 255, 0.9)" : "rgba(0, 0, 0, 0.9)"
+    const strokeColor = theme === "system" || theme === "dark" ? "rgba(255, 255, 255, 0.9)" : "rgba(0, 0, 0, 0.9)"
+    const fillColor = theme === "system" || theme === "dark" ? "rgba(255, 255, 255, 0.9)" : "rgba(0, 0, 0, 0.9)"
 
     // Draw pivot point
     ctx.beginPath()
