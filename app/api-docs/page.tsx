@@ -1,5 +1,6 @@
 'use client';
 
+import '@/app/globals.css'
 import { useSession } from "next-auth/react"
 import { redirect } from "next/navigation"
 import SwaggerUI from "swagger-ui-react"
