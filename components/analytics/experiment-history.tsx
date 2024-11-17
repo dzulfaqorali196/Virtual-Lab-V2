@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useExperiments } from "@/hooks/use-experiments"
 import {
   Table,
@@ -16,6 +16,7 @@ import { Download, Trash2 } from "lucide-react"
 import { formatDate, formatDuration } from "@/lib/utils"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 
 // Match the schema from use-experiments.ts
 interface ExperimentParameters {
@@ -88,11 +89,49 @@ function ExperimentHistoryRow({ experiment }: ExperimentHistoryRowProps) {
 }
 
 export function ExperimentHistory() {
-  const { experiments, isLoading, loadExperiments, exportData } = useExperiments()
+  const { experiments, isLoading, loadExperiments } = useExperiments()
+  const [filteredExperiments, setFilteredExperiments] = useState(experiments)
+  const [timeRange, setTimeRange] = useState("all")
 
+  // Fungsi untuk filter data
+  const filterExperiments = useCallback((range: string) => {
+    const now = new Date()
+    const startDate = new Date()
+    
+    if (range === "all") {
+      setFilteredExperiments(experiments)
+      return
+    }
+    
+    switch (range) {
+      case "today":
+        startDate.setHours(0,0,0,0)
+        break
+      case "week":
+        startDate.setDate(now.getDate() - 7)
+        break
+      case "month":
+        startDate.setMonth(now.getMonth() - 1)
+        break
+    }
+    
+    const filtered = experiments.filter(exp => {
+      const expDate = new Date(exp.timestamp)
+      return expDate >= startDate && expDate <= now
+    })
+    
+    setFilteredExperiments(filtered)
+  }, [experiments])
+
+  // Effect untuk load dan filter experiments
   useEffect(() => {
     loadExperiments()
   }, [loadExperiments])
+
+  // Effect untuk update filtered data saat experiments atau timeRange berubah
+  useEffect(() => {
+    filterExperiments(timeRange)
+  }, [filterExperiments, timeRange, experiments])
 
   if (isLoading) {
     return (
@@ -104,26 +143,7 @@ export function ExperimentHistory() {
     )
   }
 
-  if (!experiments.length) {
-    return (
-      <Card className="p-6">
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight">Experiment History</h2>
-              <p className="text-sm text-muted-foreground">
-                Record of your previous experiments
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center justify-center py-8">
-            <p className="text-sm text-muted-foreground">No experiments recorded yet.</p>
-          </div>
-        </div>
-      </Card>
-    )
-  }
-
+  // Render base layout dengan filter selalu ditampilkan
   return (
     <Card className="p-6">
       <div className="space-y-6">
@@ -134,30 +154,54 @@ export function ExperimentHistory() {
               Record of your previous experiments
             </p>
           </div>
+          
+          {/* Filter dropdown selalu ditampilkan */}
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select time range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Length (m)</TableHead>
-                <TableHead>Mass (kg)</TableHead>
-                <TableHead>Initial Angle (°)</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {experiments.map((experiment) => (
-                <ExperimentHistoryRow 
-                  key={experiment.id || experiment._id?.toString()}
-                  experiment={experiment}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        {/* Conditional rendering untuk konten */}
+        {!experiments.length ? (
+          <div className="flex items-center justify-center py-8">
+            <p className="text-sm text-muted-foreground">No experiments recorded yet.</p>
+          </div>
+        ) : !filteredExperiments.length ? (
+          <div className="flex items-center justify-center py-8">
+            <p className="text-sm text-muted-foreground">No experiments found for selected time range.</p>
+          </div>
+        ) : (
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Length (m)</TableHead>
+                  <TableHead>Mass (kg)</TableHead>
+                  <TableHead>Initial Angle (°)</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredExperiments.map((experiment) => (
+                  <ExperimentHistoryRow 
+                    key={experiment.id || experiment._id?.toString()}
+                    experiment={experiment}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
     </Card>
   )

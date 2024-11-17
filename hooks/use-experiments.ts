@@ -27,13 +27,13 @@ interface ExportOptions {
   format: "csv" | "json"
 }
 
-// Tambahkan interface untuk format data
 interface ExperimentExportData {
   Date: string
   'Length (m)': number
   'Mass (kg)': number
   'Initial Angle (°)': string
   Duration: string
+  'Time Range': string
 }
 
 interface ExperimentSummaryData {
@@ -41,6 +41,7 @@ interface ExperimentSummaryData {
   'Average Duration (s)': string
   'Average Angle (°)': string
   'Total Time (min)': string
+  'Time Period': string
 }
 
 export const useExperiments = create<ExperimentsState>()(
@@ -139,8 +140,9 @@ export const useExperiments = create<ExperimentsState>()(
         try {
           const { experiments } = get()
           let filteredData = experiments
+          let timeRangeLabel = 'All Time'
           
-          // Filter berdasarkan time range
+          // Filter berdasarkan time range dengan validasi
           if (options.timeRange !== "all") {
             const now = new Date()
             const startDate = new Date()
@@ -148,60 +150,73 @@ export const useExperiments = create<ExperimentsState>()(
             switch (options.timeRange) {
               case "today":
                 startDate.setHours(0,0,0,0)
+                timeRangeLabel = 'Today'
                 break
               case "week":
                 startDate.setDate(now.getDate() - 7)
+                timeRangeLabel = 'Last 7 Days'
                 break
               case "month":
                 startDate.setMonth(now.getMonth() - 1)
+                timeRangeLabel = 'Last 30 Days'
                 break
+              default:
+                timeRangeLabel = 'All Time'
             }
             
-            filteredData = experiments.filter(exp => 
-              new Date(exp.timestamp) >= startDate
-            )
+            filteredData = experiments.filter(exp => {
+              const expDate = new Date(exp.timestamp)
+              return expDate >= startDate && expDate <= now
+            })
           }
 
-          // Format data dengan tipe yang tepat
+          if (filteredData.length === 0) {
+            toast.error('No data available for selected time range')
+            return
+          }
+
+          // Format data dengan validasi
           if (options.dataPoints === 'summary') {
             const totalExperiments = filteredData.length
-            const avgDuration = filteredData.reduce((acc, exp) => acc + exp.duration, 0) / totalExperiments
-            const avgAngle = filteredData.reduce((acc, exp) => acc + exp.parameters.angle, 0) / totalExperiments
-            const totalTime = filteredData.reduce((acc, exp) => acc + exp.duration, 0)
+            const avgDuration = filteredData.reduce((acc, exp) => acc + (exp.duration || 0), 0) / totalExperiments
+            const avgAngle = filteredData.reduce((acc, exp) => acc + (exp.parameters?.angle || 0), 0) / totalExperiments
+            const totalTime = filteredData.reduce((acc, exp) => acc + (exp.duration || 0), 0)
 
-            // Export summary data langsung ke file
             const summaryData: ExperimentSummaryData = {
               'Total Experiments': totalExperiments,
-              'Average Duration (s)': avgDuration.toFixed(1),
-              'Average Angle (°)': avgAngle.toFixed(1),
-              'Total Time (min)': (totalTime / 60).toFixed(1)
+              'Average Duration (s)': isNaN(avgDuration) ? '0.0' : avgDuration.toFixed(1),
+              'Average Angle (°)': isNaN(avgAngle) ? '0.0' : avgAngle.toFixed(1),
+              'Total Time (min)': isNaN(totalTime) ? '0.0' : (totalTime / 60).toFixed(1),
+              'Time Period': timeRangeLabel
             }
 
             if (options.format === "json") {
               const json = JSON.stringify([summaryData], null, 2)
-              downloadFile(json, `experiments_summary_${new Date().toISOString()}.json`, 'application/json')
+              downloadFile(json, `experiments_summary_${timeRangeLabel.toLowerCase()}_${new Date().toISOString()}.json`, 'application/json')
             } else {
               const csv = Papa.unparse([summaryData])
-              downloadFile(csv, `experiments_summary_${new Date().toISOString()}.csv`, 'text/csv')
+              downloadFile(csv, `experiments_summary_${timeRangeLabel.toLowerCase()}_${new Date().toISOString()}.csv`, 'text/csv')
             }
           } else {
-            // Format untuk all data
             const exportData: ExperimentExportData[] = filteredData.map(exp => ({
-              Date: new Date(exp.timestamp).toLocaleDateString(),
-              'Length (m)': exp.parameters.length,
-              'Mass (kg)': exp.parameters.mass,
-              'Initial Angle (°)': exp.parameters.angle.toFixed(1),
-              Duration: formatDuration(exp.duration)
+              Date: new Date(exp.timestamp).toLocaleString(),
+              'Length (m)': exp.parameters?.length || 0,
+              'Mass (kg)': exp.parameters?.mass || 0,
+              'Initial Angle (°)': (exp.parameters?.angle || 0).toFixed(1),
+              Duration: formatDuration(exp.duration || 0),
+              'Time Range': timeRangeLabel
             }))
 
             if (options.format === "json") {
               const json = JSON.stringify(exportData, null, 2)
-              downloadFile(json, `experiments_all_${new Date().toISOString()}.json`, 'application/json')
+              downloadFile(json, `experiments_detailed_${timeRangeLabel.toLowerCase()}_${new Date().toISOString()}.json`, 'application/json')
             } else {
               const csv = Papa.unparse(exportData)
-              downloadFile(csv, `experiments_all_${new Date().toISOString()}.csv`, 'text/csv')
+              downloadFile(csv, `experiments_detailed_${timeRangeLabel.toLowerCase()}_${new Date().toISOString()}.csv`, 'text/csv')
             }
           }
+
+          toast.success('Data exported successfully')
         } catch (error) {
           console.error('Error exporting data:', error)
           toast.error('Failed to export data')
@@ -239,7 +254,6 @@ export const useExperiments = create<ExperimentsState>()(
   )
 )
 
-// Fungsi helper untuk download
 function downloadFile(content: string, filename: string, type: string) {
   const blob = new Blob([content], { type: `${type};charset=utf-8;` })
   const url = URL.createObjectURL(blob)
