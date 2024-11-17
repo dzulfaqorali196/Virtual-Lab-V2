@@ -5,19 +5,18 @@ export const swaggerSpec = {
       version: '1.0.0',
       description: `
         API documentation for Virtual Physics Lab application.
-        This API provides endpoints for managing user data, experiments, learning progress, and analytics.
+        This API provides endpoints for managing user data, experiments, and analytics.
         
         Features:
         - User Authentication (OAuth with Google and GitHub)
         - User Profile Management
         - Experiment Data Management
-        - Learning Progress Tracking
         - Analytics and Reports
       `,
       contact: {
         name: 'Dzulfaqor Ali',
         email: 'dzulfaqor2003@gmail.com',
-        url: 'https://github.com/dzulfaqorali196'
+        url: 'https://portofolio-webdz.vercel.app/'
       },
       license: {
         name: 'ITB',
@@ -26,11 +25,11 @@ export const swaggerSpec = {
     },
     servers: [
       {
-        url: 'https://virtual-physics-lab.vercel.app/api',
+        url: 'https://virtual-physics-lab.vercel.app/api-docs',
         description: 'Production server'
       },
       {
-        url: 'http://localhost:3000/api',
+        url: 'http://localhost:3000/api-docs',
         description: 'Development server'
       }
     ],
