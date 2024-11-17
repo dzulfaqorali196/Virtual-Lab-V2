@@ -6,6 +6,7 @@ import { AuthProvider } from '@/components/auth/auth-provider'
 import Navbar from '@/components/navbar'
 import { useTimeTracker } from '@/hooks/use-time-tracker'
 import { SessionProvider } from 'next-auth/react'
+import { Footer } from '@/components/footer'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     {children}
                   </main>
                   <Toaster />
+                  <Footer />
                 </div>
               </TimeTrackerWrapper>
             </ThemeProvider>
