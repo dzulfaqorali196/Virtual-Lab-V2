@@ -32,7 +32,24 @@ const nextConfig = {
     '@radix-ui/react-progress',
     '@radix-ui/react-primitive',
     'three'
-  ]
+  ],
+  async headers() {
+    return [
+      {
+        source: '/api-docs',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT',
+          },
+        ],
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig

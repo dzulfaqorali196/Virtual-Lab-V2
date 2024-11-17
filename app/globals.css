@@ -95,3 +95,18 @@
   transform: translate3d(0, -20px, 0);
   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
 }
+
+/* Swagger UI Dark Mode Overrides */
+.dark .swagger-ui {
+  filter: invert(0.9) hue-rotate(180deg);
+}
+
+.dark .swagger-ui .highlight-code {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+.dark .swagger-ui select,
+.dark .swagger-ui input {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}

@@ -11,7 +11,8 @@ import {
   Moon, 
   LogOut, 
   User,
-  Settings
+  Settings,
+  FileText
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { MobileMenu } from "@/components/mobile-menu"
@@ -37,6 +38,10 @@ const routes = [
     href: "/community",
     label: "Community",
   },
+  {
+    href: "/api-docs",
+    label: "API Docs",
+  }
 ]
 
 export default function Navbar() {
@@ -78,10 +83,14 @@ export default function Navbar() {
               href={route.href}
               className={cn(
                 "text-sm font-medium transition-colors hover:text-primary",
-                pathname === route.href ? "text-foreground" : "text-foreground/60"
+                pathname === route.href 
+                  ? "text-foreground" 
+                  : "text-foreground/60",
+                route.href === "/api-docs" && "flex items-center gap-1"
               )}
               prefetch={true}
             >
+              {route.href === "/api-docs" && <FileText className="h-4 w-4" />}
               {route.label}
             </Link>
           ))}
@@ -128,6 +137,12 @@ export default function Navbar() {
                   <Link href="/settings">
                     <Settings className="h-4 w-4 mr-2" />
                     Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/api-docs">
+                    <FileText className="h-4 w-4 mr-2" />
+                    API Documentation
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
