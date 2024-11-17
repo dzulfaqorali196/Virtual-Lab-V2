@@ -231,12 +231,12 @@ The application is designed to be deployed as follows:
 
 ### Simulation Interface
 <p align="center">
-  <img src="assets/screenshots/simulations.png" width="600" alt="Simulation">
+  <img src="assets/screenshots/simulation.png" width="600" alt="Simulation">
 </p>
 
-### Learning Dashboard
+### Community Interface
 <p align="center">
-  <img src="assets/screenshots/learning.png" width="600" alt="Learning">
+  <img src="assets/screenshots/community.png" width="600" alt="Community">
 </p>
 
 ### Analytics View
