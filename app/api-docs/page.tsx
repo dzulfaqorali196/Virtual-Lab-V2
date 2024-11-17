@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react"
 import { redirect } from "next/navigation"
 import SwaggerUI from "swagger-ui-react"
 import "swagger-ui-react/swagger-ui.css"
-import "swagger-ui-themes/themes/3.x/theme-material.css"
+
 import { swaggerSpec } from "./swagger"
 
 export default function ApiDocs() {
@@ -27,7 +27,7 @@ export default function ApiDocs() {
 
   return (
     <div className="container py-8">
-      <div className="prose max-w-none">
+      <div className="prose max-w-none dark:prose-invert mb-8">
         <h1>API Documentation</h1>
         <p>
           Dokumentasi lengkap API Virtual Physics Lab. Gunakan dokumentasi ini
@@ -38,7 +38,7 @@ export default function ApiDocs() {
         </div>
       </div>
       
-      <div className="mt-8">
+      <div className="swagger-wrapper dark:bg-background dark:text-foreground">
         <SwaggerUI 
           spec={swaggerSpec}
           docExpansion="list"
