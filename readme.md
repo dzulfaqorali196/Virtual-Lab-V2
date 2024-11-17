@@ -174,12 +174,6 @@ note : untuk detail lebih lanjut, silahkan lihat langsung di project
 - Configurable parameters
 - Data collection and analysis
 
-### Learning Management
-- Structured content delivery
-- Interactive quizzes
-- Progress tracking
-- Achievement system
-
 ### Data Management
 - MongoDB for data persistence
 - User progress tracking
